@@ -1,24 +1,87 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Reset Password</title>
+    <title>Reset Password - Resume App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: Arial; background:#f4f6f9; display:flex; justify-content:center; align-items:center; height:100vh; }
-        .form-container { background:white; padding:30px; border-radius:8px; box-shadow:0 0 10px rgba(0,0,0,0.2); width:350px; }
-        h2 { text-align:center; color:#1e73be; }
-        input, button { width:100%; padding:10px; margin:10px 0; border-radius:5px; }
-        button { background:#2ecc71; color:white; border:none; cursor:pointer; }
-        button:hover { background:#27ae60; }
-        .error { color:red; }
-        a { text-decoration:none; display:block; text-align:center; margin-top:10px; color:#1e73be; }
+        /* Full-page background */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            background: url('{{ asset("images/bg.jpg") }}') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Container with image background and shadow */
+        .form-container {
+            position: relative;
+            z-index: 1;
+            background: url('{{ asset("images/form-bg.jpg") }}') no-repeat center center;
+            background-size: cover;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.3);
+            width: 350px;
+            color: #fff;
+        }
+
+        .form-container h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #343434ff;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #000000ff;
+        }
+
+        a {
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            margin-top: 10px;
+            color: #fff; /* white color for consistency */
+        }
+
+        .error {
+            color: #d21414ff; /* red for errors */
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
 <div class="form-container">
-    <h2>Reset Password</h2>
+    <h2><i class="fas fa-key"></i> Reset Password</h2>
+
+    {{-- Error Message --}}
     @if($errors->any())
         <div class="error">{{ $errors->first() }}</div>
     @endif
+
     <form method="POST" action="{{ route('password.update') }}">
         @csrf
         <input type="hidden" name="token" value="{{ $token }}">
@@ -27,7 +90,9 @@
         <input type="password" name="password_confirmation" placeholder="Confirm New Password" required>
         <button type="submit">Reset Password</button>
     </form>
+
     <a href="/login">Back to Login</a>
 </div>
 </body>
 </html>
+

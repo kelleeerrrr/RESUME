@@ -4,55 +4,65 @@
     <title>Welcome - Resume App</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin:0; 
-            background:#f0f2f5; 
-            display:flex; 
-            justify-content:center; 
-            align-items:center; 
-            height:100vh; 
+        /* Full-page background */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            background: url('{{ asset("images/bg.jpg") }}') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
+
+        /* Container with image background */
         .container {
-            background:white;
-            border-radius:12px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            max-width:400px;
-            width:100%;
-            text-align:center;
-            padding:40px 30px;
-            border: 2px solid #1e73be; /* subtle blue border */
+            background: url('{{ asset("images/form-bg.jpg") }}') no-repeat center center;
+            background-size: cover;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            padding: 40px 30px;
+            color: #fff;
         }
+
         h1 {
-            color:#1e73be;
-            margin-bottom:20px;
-            font-size:2em;
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 2em;
         }
+
         p {
-            color:#555;
-            font-size:1.1em;
-            margin-bottom:30px;
+            color: #000000ff;
+            font-size: 1.1em;
+            margin-bottom: 30px;
         }
+
         .btn {
-            display:block;
-            width:80%;
-            margin:10px auto;
-            padding:12px 0;
-            font-size:1em;
-            border:none;
-            border-radius:8px;
-            cursor:pointer;
+            display: block;
+            width: 80%;
+            margin: 10px auto;
+            padding: 12px 0;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
             transition: all 0.3s ease;
-            text-decoration:none;
-            color:white;
+            text-decoration: none;
+            color: #c45858ff;
         }
-        .btn-signup { background:#2ecc71; }
-        .btn-signup:hover { background:#27ae60; transform: translateY(-2px); }
 
-        .btn-login { background:#1e73be; }
-        .btn-login:hover { background:#155a9c; transform: translateY(-2px); }
+        .btn-signup { background: #303030ff; }
+        .btn-signup:hover { background: #303030ff; transform: translateY(-2px); }
 
-        .icon { margin-right:8px; }
+        .btn-login { background: #ffffffff; }
+        .btn-login:hover { background: #ffffffff; transform: translateY(-2px); }
+
+        .icon { margin-right: 8px; }
     </style>
 </head>
 <body>

@@ -2,84 +2,62 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use Illuminate\Support\Facades\Session;
+use App\Http\Controllers\ResumeController;
 
-// Welcome Page
-Route::get('/', function () {
-    return view('welcome');
-});
+// =================== PUBLIC PAGES =================== //
 
-// Signup Routes
-Route::get('/signup', function() { 
-    return view('signup'); 
-});
+// Welcome / Landing Page
+Route::get('/', fn() => view('welcome'))->name('welcome');
 
-// Redirect GET /register to /signup to avoid MethodNotAllowed
-Route::get('/register', function() {
-    return redirect('/signup');
-});
+// Public Resume (anyone can view)
+Route::get('/public-resume', [ResumeController::class, 'showPublicResume'])->name('resume.public');
 
-// POST /register to store user
-Route::post('/register', [AuthController::class, 'register']);
+// =================== AUTH ROUTES =================== //
+// Show signup page (GET) - name it 'register' or 'signup' so Blade can link to it
+Route::get('/signup', fn() => view('signup'))->name('register'); // <- named route for signup page
 
-// Login Routes
-Route::get('/login', function() { 
-    return view('login'); 
-});
-Route::post('/login', [AuthController::class, 'login']);
+// Handle signup form (POST) - give it a distinct name
+Route::post('/register', [AuthController::class, 'register'])->name('register.post');
 
-// Forgot Password Routes
+// Show login page (GET)
+Route::get('/login', fn() => view('login'))->name('login');
+
+// Handle login form (POST)
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+
+// Logout (GET or POST per your preference)
+Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// =================== PASSWORD RESET =================== //
 Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');
 Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
-
-// Reset Password Routes
 Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 
-// Resume Page (Protected)
-Route::get('/resume', function() {
-    if (!session()->has('user_id')) {
-        return redirect('/login'); 
-    }
+// =================== PROTECTED ROUTES (LOGIN REQUIRED) =================== //
+Route::middleware(['web'])->group(function () {
 
-    $resumeData = [
-        'fullname' => 'Irish Rivera',
-        'dob' => 'January 17, 2005',
-        'pob' => 'Tinga Itaas, Batangas City',
-        'civil_status' => 'Single',
-        'specialization' => 'Computer Science',
-        'email' => '23-00679@g.batstate-u.edu.ph',
-        'phone' => '09362695155',
-        'address' => 'Tinga Itaas, Batangas City',
-        'education' => [
-            ["level"=>"Elementary", "school"=>"Tinga Itaas Elementary School", "year"=>"2017"],
-            ["level"=>"Secondary", "school"=>"STI - Batangas", "year"=>"2023"],
-            ["level"=>"Tertiary", "school"=>"Batangas State University - TNEU (Alangilan Campus)", "year"=>"Present"]
-        ],
-        'organization' => ["name"=>"ACCESS, JPCS", "position"=>"Member", "year"=>"Present"],
-        'interests' => ["Software Development", "Artificial Intelligence", "Web Development", "Cybersecurity"],
-        'skills' => [
-            "Teamwork"=>"Works effectively in group settings to achieve shared goals.",
-            "Problem Solving"=>"Able to analyze challenges and find efficient solutions.",
-            "Critical Thinking"=>"Thinks logically and evaluates information before making decisions.",
-            "Communication"=>"Expresses ideas clearly in both written and spoken form."
-        ],
-        'programming' => [
-            "HTML"=>"For structuring web pages.",
-            "CSS"=>"For designing and styling web pages.",
-            "PHP"=>"For backend web development.",
-            "JavaScript"=>"For interactive and dynamic web content.",
-            "Python"=>"For data analysis, AI, and backend development.",
-            "Java"=>"For cross-platform applications and Android development."
-        ],
-        'awards' => ["Dean’s Lister - First Year, First Semester (2023-2024)"]
-    ];
+    // Home / Dashboard
+    Route::get('/home', function () {
+        if (!session()->has('user_id')) return redirect('/login');
+        $userName = session('user_name', 'Guest');
+        return view('home', ['userName' => $userName]);
+    });
 
-    return view('resume', $resumeData);
-});
+    // =================== PROTECTED RESUME =================== //
+    Route::get('/resume', [ResumeController::class, 'resume'])->name('resume.show');
+    Route::get('/resume/edit/{id}', [ResumeController::class, 'editResume'])->name('resume.edit');
+    Route::put('/resume/{id}', [ResumeController::class, 'updateResume'])->name('resume.update');
+    Route::post('/resume', [ResumeController::class, 'storeResume'])->name('resume.store');
+    Route::delete('/resume/{id}', [ResumeController::class, 'deleteResume'])->name('resume.delete');
+    Route::get('/resume/download/{id?}', [ResumeController::class, 'downloadResume'])->name('resume.download');
 
-// Logout
-Route::get('/logout', function() {
-    Session::forget('user_id');
-    return redirect('/');
+    // =================== OTHER PAGES =================== //
+    Route::get('/about', fn() => session()->has('user_id') ? view('about') : redirect('/login'));
+    Route::get('/skills', fn() => session()->has('user_id') ? view('skills') : redirect('/login'));
+    Route::get('/projects', fn() => session()->has('user_id') ? view('projects') : redirect('/login'));
+
+    // =================== CONTACT PAGE =================== //
+    Route::get('/contact', [AuthController::class, 'contact'])->name('contact.show');
+    Route::post('/contact', [AuthController::class, 'sendContact'])->name('contact.send');
 });

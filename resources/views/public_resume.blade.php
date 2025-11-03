@@ -51,7 +51,6 @@
       color: #333;
       transition: background 0.4s, color 0.4s;
     }
-    /* prefer html.dark but keep body.dark compatibility */
     html.dark body,
     body.dark {
       background: linear-gradient(to bottom right, #0f1720, #1b2430), url('{{ asset("images/resumebg.jpg") }}') no-repeat center center fixed;
@@ -92,15 +91,9 @@
       padding-bottom: 20px;
     }
     .welcome-msg h1 { font-size:1.6rem; margin-bottom:6px; color:var(--pink-soft); }
-    .welcome-msg p {
-      font-size: 0.98rem;
-      color: #111;
-      transition: color 0.3s ease;
-    }
+    .welcome-msg p { font-size: 0.98rem; color: #111; transition: color 0.3s ease; }
     html.dark .welcome-msg p,
-    body.dark .welcome-msg p {
-      color: #fff;
-    }
+    body.dark .welcome-msg p { color: #fff; }
 
     /* Action row (Download + Back button) */
     .action-row {
@@ -176,7 +169,6 @@
       header { padding:10px 12px; }
     }
 
-    /* PRINT STYLES */
     @media print {
       html, body { background: #fff !important; color: #000 !important; height: auto !important; margin: 0 !important; padding: 0 !important; }
       header, .action-row, .welcome-msg { display: none !important; }
@@ -202,7 +194,6 @@
 
   <div class="action-row">
     <button class="download-cv-btn" id="downloadCvBtn">📄 Download CV</button>
-    <!-- back-btn is a themed link so theme persists on navigation -->
     <a href="{{ route('welcome') }}" id="backBtn" class="back-btn themed-link">Back →</a>
   </div>
 
@@ -217,7 +208,8 @@
 
   <div class="container" id="resumeContainer">
     <div class="left">
-      <img src="{{ asset('profile.jpg') }}" alt="Profile Picture">
+      <img src="{{ $resume->profile_photo ? asset('storage/' . $resume->profile_photo) . '?t=' . time() : asset('profile.jpg') }}" alt="Profile Picture">
+
       @if(!empty($resume->fullname) || !empty($resume->dob) || !empty($resume->pob) || !empty($resume->civil_status) || !empty($resume->specialization))
         <h2>Personal Information</h2>
         @if(!empty($resume->fullname)) <p><strong>Full Name:</strong> {{ $resume->fullname }}</p> @endif
@@ -300,138 +292,24 @@
 
   <script>
     (function(){
-      // helpers: cookie read/write
       function readCookie(name){
-        try {
-          var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
-          return m ? decodeURIComponent(m[1]) : null;
-        } catch(e){ return null; }
+        try { var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)')); return m ? decodeURIComponent(m[1]) : null; } catch(e){ return null; }
       }
-      function writeThemeCookie(value){
-        try {
-          var maxAge = 60 * 60 * 24 * 365;
-          document.cookie = 'theme=' + encodeURIComponent(value) + ';path=/;max-age=' + maxAge + ';SameSite=Lax';
-        } catch(e){}
-      }
+      function writeThemeCookie(value){ try { var maxAge = 60*60*24*365; document.cookie='theme='+encodeURIComponent(value)+';path=/;max-age='+maxAge+';SameSite=Lax'; } catch(e){} }
+      function currentTheme(){ try { var s=null; try{s=localStorage.getItem('theme');}catch(e){} if(s) return s; var c=readCookie('theme'); if(c) return c; if(document.documentElement.classList.contains('dark')||document.body.classList.contains('dark')) return 'dark'; } catch(e){} return 'light'; }
+      function persistTheme(t){ try{ localStorage.setItem('theme', t); }catch(e){} writeThemeCookie(t); }
 
-      // get current theme: prefer localStorage -> cookie -> html/body class -> default light
-      function currentTheme(){
-        try {
-          var s = null;
-          try { s = localStorage.getItem('theme'); } catch(e){}
-          if (s) return s;
-          var c = readCookie('theme');
-          if (c) return c;
-          if (document.documentElement.classList.contains('dark') || document.body.classList.contains('dark')) return 'dark';
-        } catch(e){}
-        return 'light';
-      }
-
-      // persist theme to storage + cookie
-      function persistTheme(t){
-        try { localStorage.setItem('theme', t); } catch(e){}
-        writeThemeCookie(t);
-      }
-
-      var themeToggle = document.getElementById('themeToggle');
-      var root = document.documentElement; // use <html> for theme class
-      var welcomeMsg = document.getElementById('welcomeMsg');
-
-      // Sync toggle icon on load & ensure classes reflect stored theme
-      (function syncToggleIcon(){
-        try {
-          var saved = currentTheme();
-          if (themeToggle) {
-            themeToggle.textContent = saved === 'dark' ? '🌞' : '🌙';
-            themeToggle.setAttribute('aria-pressed', saved === 'dark' ? 'true' : 'false');
-          }
-          if (saved === 'dark') { root.classList.add('dark'); document.body.classList.add('dark'); }
-          else { root.classList.remove('dark'); document.body.classList.remove('dark'); }
-        } catch(e){}
-      })();
-
-      // Toggle behavior
-      if (themeToggle) {
-        themeToggle.addEventListener('click', function(){
-          try {
-            var isDark = root.classList.toggle('dark');
-            if (isDark) document.body.classList.add('dark'); else document.body.classList.remove('dark');
-            var newTheme = isDark ? 'dark' : 'light';
-            persistTheme(newTheme);
-            themeToggle.textContent = isDark ? '🌞' : '🌙';
-            themeToggle.setAttribute('aria-pressed', isDark ? 'true' : 'false');
-          } catch(e){}
-        });
-      }
-
-      // Themed links: append ?theme=... and set cookie before navigation
-      // Preserve theme on navigation without adding ?theme= to the URL
-      (function setupThemedLinks(){
-        var links = document.querySelectorAll('.themed-link');
-        if (!links || links.length === 0) return;
-
-        links.forEach(function(a){
-          a.addEventListener('click', function(e){
-      // Allow open in new tab behavior
-          if (e.metaKey || e.ctrlKey || e.button === 1) return;
-      // Just store the theme before navigation
-          var t = currentTheme() || 'light';
-          persistTheme(t);
-      // Go directly to href without adding ?theme=
-      // Browser will open the link normally
-        });
-      });
-    })();
-
-
-      // Back button — navigate to welcome with current theme query param (preserves dark/light)
-      var backBtn = document.getElementById('backBtn');
-      if (backBtn) {
-        backBtn.addEventListener('click', function(e){
-          if (e.metaKey || e.ctrlKey || e.button === 1) return;
-          var theme = currentTheme() || 'light';
-          persistTheme(theme);
-          // just navigate normally (no ?theme=)
-          window.location.href = backBtn.getAttribute('href') || '{{ route("welcome") }}';
-        });
-      }
-
-
-      // Print / download: temporarily remove dark class so print colors come out correctly
-      var downloadBtn = document.getElementById('downloadCvBtn');
-      function handleBeforePrint() {
-        if (welcomeMsg) welcomeMsg.style.display = 'none';
-        if (root.classList.contains('dark')) { document._wasDark = true; root.classList.remove('dark'); document.body.classList.remove('dark'); }
-      }
-      function handleAfterPrint() {
-        if (welcomeMsg) welcomeMsg.style.display = '';
-        if (document._wasDark) { root.classList.add('dark'); document.body.classList.add('dark'); document._wasDark = false; }
-      }
-      window.addEventListener('beforeprint', handleBeforePrint);
-      window.addEventListener('afterprint', handleAfterPrint);
-
-      if (downloadBtn) {
-        downloadBtn.addEventListener('click', function(e){
-          e.preventDefault();
-          handleBeforePrint();
-          setTimeout(function(){ window.print(); setTimeout(handleAfterPrint, 500); }, 50);
-        });
-      }
-
-      // Absorb query param theme if present into storage/cookie (keeps consistency when arriving)
-      (function absorbQueryTheme(){
-        try {
-          var params = new URLSearchParams(location.search);
-          var q = params.get('theme');
-          if (q === 'dark' || q === 'light') {
-            persistTheme(q);
-            if (q === 'dark') { root.classList.add('dark'); document.body.classList.add('dark'); }
-            else { root.classList.remove('dark'); document.body.classList.remove('dark'); }
-            themeToggle && (themeToggle.textContent = q === 'dark' ? '🌞' : '🌙');
-          }
-        } catch(e){}
-      })();
-
+      var themeToggle=document.getElementById('themeToggle'), root=document.documentElement, welcomeMsg=document.getElementById('welcomeMsg');
+      (function syncToggleIcon(){ try{ var saved=currentTheme(); if(themeToggle){ themeToggle.textContent=saved==='dark'?'🌞':'🌙'; themeToggle.setAttribute('aria-pressed',saved==='dark'?'true':'false'); } if(saved==='dark'){ root.classList.add('dark'); document.body.classList.add('dark'); } else { root.classList.remove('dark'); document.body.classList.remove('dark'); } }catch(e){} })();
+      if(themeToggle){ themeToggle.addEventListener('click',function(){ try{ var isDark=root.classList.toggle('dark'); if(isDark) document.body.classList.add('dark'); else document.body.classList.remove('dark'); var newTheme=isDark?'dark':'light'; persistTheme(newTheme); themeToggle.textContent=isDark?'🌞':'🌙'; themeToggle.setAttribute('aria-pressed',isDark?'true':'false'); }catch(e){} }); }
+      (function setupThemedLinks(){ var links=document.querySelectorAll('.themed-link'); if(!links||links.length===0) return; links.forEach(function(a){ a.addEventListener('click',function(e){ if(e.metaKey||e.ctrlKey||e.button===1) return; var t=currentTheme()||'light'; persistTheme(t); }); }); })();
+      var backBtn=document.getElementById('backBtn'); if(backBtn){ backBtn.addEventListener('click',function(e){ if(e.metaKey||e.ctrlKey||e.button===1) return; var theme=currentTheme()||'light'; persistTheme(theme); window.location.href=backBtn.getAttribute('href')||'{{ route("welcome") }}'; }); }
+      var downloadBtn=document.getElementById('downloadCvBtn');
+      function handleBeforePrint(){ if(welcomeMsg) welcomeMsg.style.display='none'; if(root.classList.contains('dark')){ document._wasDark=true; root.classList.remove('dark'); document.body.classList.remove('dark'); } }
+      function handleAfterPrint(){ if(welcomeMsg) welcomeMsg.style.display=''; if(document._wasDark){ root.classList.add('dark'); document.body.classList.add('dark'); document._wasDark=false; } }
+      window.addEventListener('beforeprint',handleBeforePrint); window.addEventListener('afterprint',handleAfterPrint);
+      if(downloadBtn){ downloadBtn.addEventListener('click',function(e){ e.preventDefault(); handleBeforePrint(); setTimeout(function(){ window.print(); setTimeout(handleAfterPrint,500); },50); }); }
+      (function absorbQueryTheme(){ try{ var params=new URLSearchParams(location.search); var q=params.get('theme'); if(q==='dark'||q==='light'){ persistTheme(q); if(q==='dark'){ root.classList.add('dark'); document.body.classList.add('dark'); } else{ root.classList.remove('dark'); document.body.classList.remove('dark'); } themeToggle&&(themeToggle.textContent=q==='dark'?'🌞':'🌙'); } }catch(e){} })();
     })();
   </script>
 </body>

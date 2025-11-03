@@ -61,7 +61,8 @@
 
 <div class="container">
     <div class="left">
-        <img src="{{ asset('profile.jpg') }}" alt="Profile Picture">
+        {{-- Profile Picture --}}
+        <img src="{{ $resume->profile_photo ? asset('storage/' . $resume->profile_photo) . '?t=' . time() : 'https://via.placeholder.com/150' }}" alt="Profile Picture">
 
         {{-- Personal Information --}}
         @if(!empty($resume->fullname) || !empty($resume->dob) || !empty($resume->pob) || !empty($resume->civil_status) || !empty($resume->specialization))

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Resume;
+use Illuminate\Support\Facades\Storage;
 
 class ResumeController extends Controller
 {
@@ -71,6 +72,21 @@ class ResumeController extends Controller
                         ->where('user_id', session('user_id'))
                         ->firstOrFail();
 
+        // Handle cropped profile image if provided
+        if ($request->cropped_image) {
+            // Delete old image if exists
+            if ($resume->profile_photo && Storage::disk('public')->exists($resume->profile_photo)) {
+                Storage::disk('public')->delete($resume->profile_photo);
+            }
+
+            $image = $request->cropped_image;
+            $image = str_replace('data:image/png;base64,', '', $image);
+            $image = str_replace(' ', '+', $image);
+            $imageName = 'resume_' . session('user_id') . '_' . time() . '.png';
+            Storage::disk('public')->put('resume_photos/' . $imageName, base64_decode($image));
+            $resume->profile_photo = 'resume_photos/' . $imageName;
+        }
+
         $this->saveResumeData($resume, $request);
         $resume->save();
 
@@ -85,6 +101,11 @@ class ResumeController extends Controller
         $resume = Resume::where('id', $id)
                         ->where('user_id', session('user_id'))
                         ->firstOrFail();
+
+        // Delete profile photo if exists
+        if ($resume->profile_photo && Storage::disk('public')->exists($resume->profile_photo)) {
+            Storage::disk('public')->delete($resume->profile_photo);
+        }
 
         $resume->delete();
         return redirect('/resume')->with('success', 'Resume deleted successfully!');

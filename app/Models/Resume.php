@@ -9,6 +9,7 @@ class Resume extends Model
 {
     use HasFactory;
 
+    // ==================== Fillable Fields ==================== //
     protected $fillable = [
         'user_id',
         'fullname',
@@ -27,8 +28,10 @@ class Resume extends Model
         'programming', // Added programming languages
         'projects',
         'awards',
+        'profile_photo', // <--- Added for profile image upload
     ];
 
+    // ==================== Cast JSON fields to array ==================== //
     protected $casts = [
         'organization' => 'array',
         'interests' => 'array',
@@ -39,10 +42,9 @@ class Resume extends Model
         'awards' => 'array',
     ];
 
+    // ==================== Relationship to User ==================== //
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 }
-
-

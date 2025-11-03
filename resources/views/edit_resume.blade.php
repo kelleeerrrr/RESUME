@@ -3,6 +3,7 @@
 @section('title', 'Edit Resume | Irish Rivera')
 
 @section('content')
+<link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css" rel="stylesheet"/>
 <style>
     .container { max-width: 900px; margin: 40px auto; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.2); border-radius: 8px; padding: 20px; color: #333; }
     body.dark .container { background: #2a2a2a; color: #f5f5f5; }
@@ -21,6 +22,11 @@
     .btn-add:hover { opacity: 0.9; }
     .btn-remove { background-color: #e74c3c; }
     .btn-remove:hover { opacity: 0.9; }
+
+    /* Profile picture */
+    #profile-preview { width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 2px solid #ccc; margin-bottom: 10px; }
+    #cropper-modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); justify-content:center; align-items:center; z-index:9999; }
+    #cropper-container { background:white; padding:20px; border-radius:10px; max-width:90%; max-height:90%; }
 </style>
 
 <div class="container">
@@ -30,9 +36,17 @@
         <p style="color:green;">{{ session('success') }}</p>
     @endif
 
-    <form action="{{ route('resume.update', ['id' => $resume->id]) }}" method="POST">
+    <form action="{{ route('resume.update', ['id' => $resume->id]) }}" method="POST" enctype="multipart/form-data">
         @csrf
         @method('PUT')
+
+        {{-- Profile Picture --}}
+        <div class="section">
+            <h2>Profile Picture</h2>
+            <img id="profile-preview" src="{{ $resume->profile_photo ? asset('storage/'.$resume->profile_photo) : 'https://via.placeholder.com/150' }}" alt="Profile Preview">
+            <input type="file" id="profile-input" accept="image/*">
+            <input type="hidden" name="cropped_image" id="cropped_image">
+        </div>
 
         {{-- Personal Info --}}
         <div class="section">
@@ -172,7 +186,48 @@
     </form>
 </div>
 
+<!-- Cropper Modal -->
+<div id="cropper-modal">
+    <div id="cropper-container">
+        <img id="cropper-image" style="max-width:100%; max-height:70vh;">
+        <div style="margin-top:10px; text-align:right;">
+            <button id="crop-btn" class="btn btn-save">Crop & Save</button>
+            <button id="cancel-btn" class="btn btn-remove">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
 <script>
+    let cropper;
+    const input = document.getElementById('profile-input');
+    const preview = document.getElementById('profile-preview');
+    const modal = document.getElementById('cropper-modal');
+    const cropperImage = document.getElementById('cropper-image');
+    const croppedInput = document.getElementById('cropped_image');
+
+    input.addEventListener('change', function(e){
+        const file = e.target.files[0];
+        if(!file) return;
+        const url = URL.createObjectURL(file);
+        cropperImage.src = url;
+        modal.style.display = 'flex';
+        if(cropper) cropper.destroy();
+        cropper = new Cropper(cropperImage, { aspectRatio: 1, viewMode: 1 });
+    });
+
+    document.getElementById('crop-btn').addEventListener('click', function(){
+        const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
+        preview.src = canvas.toDataURL('image/png');
+        croppedInput.value = canvas.toDataURL('image/png'); // Send as base64
+        modal.style.display = 'none';
+    });
+
+    document.getElementById('cancel-btn').addEventListener('click', function(){
+        modal.style.display = 'none';
+    });
+
+    // Your existing addInput, addOrganization, addSkill, addProgramming functions
     function addInput(containerId, name){
         const container = document.getElementById(containerId);
         const div = document.createElement('div');

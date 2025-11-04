@@ -1,237 +1,271 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title')</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        /* 🌸 Root Variables (Theme & Color System) */
-        :root {
-            --accent: #ff1f84;
-            --accent-light: #ff8db5;
-            --bg-light: #f9f9fb;
-            --bg-dark: #1e1e1e;
-            --text-light: #222;
-            --text-dark: #ffffff;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>@yield('title')</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* 🌸 Root Variables */
+    :root {
+      --accent: #ff1f84;
+      --accent-light: #ff8db5;
+      --bg-light: #f9f9fb;
+      --bg-dark: #1e1e1e;
+      --text-light: #222;
+      --text-dark: #ffffff;
+    }
 
-        /* 🌸 Base Layout */
-        body {
-            margin: 0;
-            font-family: 'Poppins', sans-serif;
-            background: url('{{ asset("images/resumebg.jpg") }}') no-repeat center center fixed;
-            background-size: cover;
-            color: var(--text-light);
-            transition: background 0.4s, color 0.4s;
-        }
+    /* 🌸 Base Layout */
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: url('{{ asset("images/resumebg.jpg") }}') no-repeat center center fixed;
+      background-size: cover;
+      color: var(--text-light);
+      transition: background 0.4s, color 0.4s;
+    }
 
-        body.dark {
-            background: linear-gradient(to bottom right, #1a1a1a, #2a2a2a),
-                        url('{{ asset("images/resumebg.jpg") }}') no-repeat center center fixed;
-            background-blend-mode: multiply;
-            color: var(--text-dark);
-        }
+    body.dark {
+      background: linear-gradient(to bottom right, #1a1a1a, #2a2a2a),
+                  url('{{ asset("images/resumebg.jpg") }}') no-repeat center center fixed;
+      background-blend-mode: multiply;
+      color: var(--text-dark);
+    }
 
-        /* 🌸 Top Navigation Bar */
-        .navbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: var(--accent);
-            padding: 12px 30px;
-            position: sticky;
-            top: 0;
-            z-index: 999;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-        }
+    /* 🌸 Navbar */
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--accent);
+      padding: 12px 30px;
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+      transition: background 0.4s;
+    }
 
-        /* Logo */
-        .navbar .logo {
-            height: 50px;
-            width: auto;
-            margin-right: 15px;
-        }
+    /* ✅ Always bright topbar even in dark mode */
+    body.dark .navbar {
+      background-color: var(--accent);
+      box-shadow: 0 3px 10px rgba(255, 255, 255, 0.1);
+    }
 
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+    .navbar .logo {
+      height: 50px;
+      width: auto;
+      margin-right: 15px;
+    }
 
-        .nav-links a {
-            text-decoration: none;
-            color: white;
-            font-weight: 500;
-            padding: 6px 10px;
-            border-radius: 6px;
-            transition: 0.3s;
-            position: relative;
-        }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
-        /* 🌸 Hover & Active Link Feedback */
-        .nav-links a:hover {
-            background: rgba(255,255,255,0.2);
-        }
+    .nav-links a {
+      text-decoration: none;
+      color: white;
+      font-weight: 500;
+      padding: 6px 10px;
+      border-radius: 6px;
+      transition: 0.3s;
+      position: relative;
+    }
 
-        .nav-links a.active {
-            border: 2px solid white;
-        }
+    /* 🌸 Hover & Active */
+    .nav-links a:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
 
-        body.dark .nav-links a.active {
-            border: 2px solid var(--accent-light);
-            color: var(--accent-light);
-        }
+    .nav-links a.active {
+      color: #fff;
+      font-weight: 600;
+    }
 
-        /* 🌸 Dark Mode Toggle */
-        .dark-mode-toggle {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
-            margin-left: 10px;
-            transition: transform 0.3s;
-        }
+    .nav-links a.active::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      bottom: -2px;
+      width: 100%;
+      height: 3px;
+      background: white;
+      border-radius: 3px;
+    }
 
-        .dark-mode-toggle:hover {
-            transform: rotate(20deg);
-        }
+    /* Keep links bright in dark mode */
+    body.dark .nav-links a {
+      color: white;
+    }
 
-        /* 🌸 Page Container */
-        .page-container {
-            max-width: 1100px;
-            margin: 60px auto 40px auto;
-            padding: 0 20px;
-            animation: fadeIn 0.6s ease-in-out;
-        }
+    body.dark .nav-links a:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    body.dark .nav-links a.active::after {
+      background: white;
+    }
 
-        /* 🌸 Reusable Button Styles */
-        .btn, .back-btn {
-            display: inline-block;
-            padding: 10px 20px;
-            border-radius: 6px;
-            background-color: var(--accent);
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: 0.3s;
-        }
+    /* 🌸 Dark Mode Toggle */
+    .dark-mode-toggle {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      margin-left: 10px;
+      transition: transform 0.3s;
+    }
 
-        .btn:hover, .back-btn:hover {
-            opacity: 0.9;
-            transform: translateY(-2px);
-        }
+    .dark-mode-toggle:hover {
+      transform: rotate(20deg);
+    }
 
-        /* 🌸 Success Message Feedback */
-        .success-banner {
-            background: #2ecc71;
-            color: white;
-            padding: 10px;
-            text-align: center;
-            font-weight: 600;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            z-index: 1000;
-            animation: slideDown 0.5s ease;
-        }
+    /* 🌸 Page Container */
+    .page-container {
+      max-width: 1100px;
+      margin: 60px auto 40px auto;
+      padding: 0 20px;
+      animation: fadeIn 0.6s ease-in-out;
+    }
 
-        @keyframes slideDown {
-            from { transform: translateY(-100%); }
-            to { transform: translateY(0); }
-        }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-        /* 🌸 Footer */
-        footer {
-            text-align: center;
-            padding: 15px;
-            background: rgba(255,255,255,0.7);
-            color: #555;
-            font-size: 0.9em;
-        }
+    /* 🌸 Buttons */
+    .btn, .back-btn {
+      display: inline-block;
+      padding: 10px 20px;
+      border-radius: 6px;
+      background-color: var(--accent);
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: 0.3s;
+    }
 
-        body.dark footer {
-            background: rgba(0,0,0,0.3);
-            color: #ccc;
-        }
+    .btn:hover, .back-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+    }
 
-        /* 🌸 Print Handling */
-        @media print {
-            body {
-                background: white !important;
-                color: black !important;
-            }
-            .navbar, .dark-mode-toggle, footer, .success-banner {
-                display: none !important;
-            }
-        }
-    </style>
+    /* 🌸 Success Banner */
+    .success-banner {
+      background: #2ecc71;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-weight: 600;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      z-index: 1000;
+      animation: slideDown 0.5s ease;
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-100%); }
+      to { transform: translateY(0); }
+    }
+
+    /* 🌸 Footer */
+    footer {
+      text-align: center;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.7);
+      color: #555;
+      font-size: 0.9em;
+    }
+
+    body.dark footer {
+      background: rgba(0, 0, 0, 0.3);
+      color: #ccc;
+    }
+
+    /* 🌸 Print Handling */
+    @media print {
+      body {
+        background: white !important;
+        color: black !important;
+      }
+      .navbar, .dark-mode-toggle, footer, .success-banner {
+        display: none !important;
+      }
+    }
+  </style>
 </head>
 <body>
 
-    {{-- ✅ Feedback Message --}}
-    @if(session('success'))
-        <div class="success-banner" id="successBanner">
-            {{ session('success') }}
-        </div>
-    @endif
+  {{-- ✅ Success Feedback --}}
+  @if(session('success'))
+  <div class="success-banner" id="successBanner">
+    {{ session('success') }}
+  </div>
+  @endif
 
-    {{-- 🌸 Navbar --}}
-    <nav class="navbar">
-        <a href="/home">
-            <img src="{{ asset('images/logo.png') }}" alt="Logo" class="logo">
-        </a>
-        <div class="nav-links">
-            <a href="/home" class="{{ request()->is('home') ? 'active' : '' }}">Home</a>
-            <a href="/about" class="{{ request()->is('about') ? 'active' : '' }}">About</a>
-            <a href="/projects" class="{{ request()->is('projects') ? 'active' : '' }}">Projects</a>
-            <a href="/skills" class="{{ request()->is('skills') ? 'active' : '' }}">Skills</a>
-            <a href="/resume" class="{{ request()->is('resume') ? 'active' : '' }}">Resume</a>
-            <a href="/contact" class="{{ request()->is('contact') ? 'active' : '' }}">Contact</a>
-            <a href="/logout" class="btn" style="background:#6d6a6c;">Logout</a>
-            <button class="dark-mode-toggle" id="themeToggle" title="Toggle Dark Mode">🌙</button>
-        </div>
-    </nav>
-
-    {{-- 🌸 Page Content --}}
-    <div class="page-container">
-        @yield('content')
+  {{-- 🌸 Navbar --}}
+  <nav class="navbar">
+    <a href="/home">
+      <img src="{{ asset('images/logo.png') }}" alt="Logo" class="logo">
+    </a>
+    <div class="nav-links">
+      <a href="/home" class="{{ request()->is('home') ? 'active' : '' }}">Home</a>
+      <a href="/about" class="{{ request()->is('about') ? 'active' : '' }}">About</a>
+      <a href="/projects" class="{{ request()->is('projects') ? 'active' : '' }}">Projects</a>
+      <a href="/skills" class="{{ request()->is('skills') ? 'active' : '' }}">Skills</a>
+      <a href="/resume" class="{{ request()->is('resume') || request()->is('resume/*') ? 'active' : '' }}">Resume</a>
+      <a href="/contact" class="{{ request()->is('contact') ? 'active' : '' }}">Contact</a>
+      <a href="/logout" class="btn" style="background:#6d6a6c;">Logout</a>
+      <button class="dark-mode-toggle" id="themeToggle" title="Toggle Dark Mode">🌙</button>
     </div>
+  </nav>
 
-    {{-- 🌸 Footer --}}
-    <footer>
-        © {{ date('Y') }} Irish Rivera • Designed with 💗 
-    </footer>
+  {{-- 🌸 Page Content --}}
+  <div class="page-container">
+    @yield('content')
+  </div>
 
-    {{-- 🌸 Script for Interactivity & Feedback --}}
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const banner = document.getElementById("successBanner");
-            if (banner) setTimeout(() => banner.style.display = "none", 4000);
+  {{-- 🌸 Footer --}}
+  <footer>
+    © {{ date('Y') }} Irish Rivera • Designed with 💗
+  </footer>
 
-            const toggle = document.getElementById('themeToggle');
-            const body = document.body;
+  {{-- 🌸 Script for Dark Mode --}}
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const banner = document.getElementById("successBanner");
+      if (banner) setTimeout(() => banner.style.display = "none", 4000);
 
-            // Remember theme
-            if (localStorage.getItem('theme') === 'dark') {
-                body.classList.add('dark');
-                toggle.textContent = '🌞';
-            }
+      const toggle = document.getElementById('themeToggle');
+      const body = document.body;
 
-            toggle.addEventListener('click', () => {
-                body.classList.toggle('dark');
-                const isDark = body.classList.contains('dark');
-                toggle.textContent = isDark ? '🌞' : '🌙';
-                localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            });
-        });
-    </script>
+      if (localStorage.getItem('theme') === 'dark') {
+        body.classList.add('dark');
+        toggle.textContent = '🌞';
+      }
+
+      toggle.addEventListener('click', () => {
+        body.classList.toggle('dark');
+        const isDark = body.classList.contains('dark');
+        toggle.textContent = isDark ? '🌞' : '🌙';
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      });
+    });
+
+    // 🌙 Save theme before logout
+    document.addEventListener('click', function (e) {
+      if (e.target.closest('a[href*="logout"]')) {
+        const isDark = document.body.classList.contains('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        document.cookie = 'theme=' + encodeURIComponent(isDark ? 'dark' : 'light') + ';path=/;max-age=31536000;SameSite=Lax';
+      }
+    });
+  </script>
 </body>
 </html>

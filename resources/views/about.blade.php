@@ -6,7 +6,7 @@
 <style>
     .container {
         max-width: 1000px;
-        margin: 5px auto 15px auto;
+        margin: -30px auto 15px auto;
         background: #ffffff;
         padding: 35px 40px;
         border-radius: 14px;
@@ -21,13 +21,13 @@
 
     h2 {
         color: var(--accent);
-        margin-bottom: 15px;
+        margin-top: 10px;
         font-size: 2em;
         font-weight: 700;
     }
 
     h3 {
-        margin-top: 40px;
+        margin-top: 50px;
         color: var(--accent);
         display: flex;
         align-items: center;

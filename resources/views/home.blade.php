@@ -6,9 +6,9 @@
 <style>
     .container {
         max-width: 1100px;
-        margin: 5px auto 15px auto;
+        margin: -40px auto 15px auto;
         background: #ffffff;
-        padding: 35px 40px;
+        padding: 10px 40px;
         border-radius: 14px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.1);
         transition: background 0.4s, box-shadow 0.3s;
@@ -79,7 +79,7 @@
     }
 
     section img {
-        width: 280px;
+        width: 250px;
         border-radius: 50%;
         box-shadow: 0 0 12px rgba(0, 0, 0, 0.2);
         transition: 0.3s;
@@ -104,7 +104,7 @@
     }
 
     .contact-section a {
-        color: #ff69b4; /* Pink color */
+        color: #ff69b4;
         text-decoration: none;
         font-weight: 500;
         transition: 0.3s;
@@ -141,7 +141,7 @@
                 <span style="color:var(--accent);">Cybersecurity Enthusiast</span>.
             </p>
 
-            <p class="tagline">“Designing with logic, coding with purpose.”</p>
+            <p class="tagline">“Design with soul, develop with reason.”</p>
 
             <div style="margin-top:20px;">
                 <a href="/projects" class="btn">View My Projects</a>
@@ -160,5 +160,16 @@
 </div>
 
 <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
-@endsection
 
+{{-- Save dark/light mode before logging out --}}
+<script>
+document.addEventListener('click', function(e) {
+    // If the clicked element is inside your logout form or link
+    if (e.target.closest('form[action*="logout"]') || e.target.closest('a[href*="logout"]')) {
+        const isDark = document.documentElement.classList.contains('dark');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        document.cookie = 'theme=' + encodeURIComponent(isDark ? 'dark' : 'light') + ';path=/;max-age=31536000;SameSite=Lax';
+    }
+});
+</script>
+@endsection

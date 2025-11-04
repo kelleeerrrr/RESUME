@@ -13,7 +13,7 @@
     h2.section-title {
         color: var(--accent);
         font-size: 2em;
-        margin-bottom: 10px;
+        margin-top: -35px;
     }
 
     p.section-desc {
@@ -44,10 +44,10 @@
     /* Skill bars */
     .skill-group { margin-bottom: 25px; }
     .skill-label { font-weight: bold; margin-bottom: 8px; }
-    .skill-bar-container { width: 100%; background-color: #ddd; border-radius: 8px; overflow: hidden; height: 25px; margin-bottom: 10px; }
+    .skill-bar-container { width: 100%; background-color: #ddd; border-radius: 8px; overflow: hidden; height: 22px; margin-bottom: 10px; }
 
     .skill-bar {
-        height: 25px;
+        height: 22px;
         border-radius: 8px;
         line-height: 25px;
         padding-left: 10px;

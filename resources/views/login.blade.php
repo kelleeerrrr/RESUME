@@ -68,8 +68,8 @@
       border-radius: 12px;
       box-shadow: 0 0 18px rgba(0,0,0,0.45);
       width: 86%;
-      max-width: 450px;
-      margin: 110px auto;
+      max-width: 500px;
+      margin: 130px auto;
       display: flex;
       flex-direction: column;
       gap: 10px;

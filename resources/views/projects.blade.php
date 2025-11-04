@@ -130,7 +130,7 @@
 </style>
 
 <h2 style="color:var(--accent); text-align:center;">Featured Projects</h2>
-<p style="text-align:center; max-width:700px; margin: 10px auto 30px auto; font-size:1.1em; color:#555;">
+<p style="text-align:center; max-width:700px; margin: 10px auto 30px auto; font-size:1.1em; color:#fffff;">
     These are my key projects demonstrating skills in software, automation, and embedded systems.
 </p>
 

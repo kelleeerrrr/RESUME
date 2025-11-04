@@ -2,49 +2,29 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Resume extends Model
 {
-    use HasFactory;
-
-    // ==================== Fillable Fields ==================== //
     protected $fillable = [
-        'user_id',
-        'fullname',
-        'about',
-        'dob',
-        'pob',
-        'civil_status',
-        'specialization',
-        'email',
-        'phone',
-        'address',
-        'organization',
-        'interests',
-        'education',
-        'skills',
-        'programming', // Added programming languages
-        'projects',
-        'awards',
-        'profile_photo', // <--- Added for profile image upload
+        'fullname', 'dob', 'pob', 'civil_status', 'specialization',
+        'email', 'phone', 'address', 'profile_photo',
+        'organization', 'education', 'interests', 'skills', 'programming', 'projects'
     ];
 
-    // ==================== Cast JSON fields to array ==================== //
+    // Cast JSON/text columns to array
     protected $casts = [
         'organization' => 'array',
-        'interests' => 'array',
-        'education' => 'array',
-        'skills' => 'array',
-        'programming' => 'array', // Cast to array for safe foreach
-        'projects' => 'array',
-        'awards' => 'array',
+        'education'   => 'array',
+        'interests'   => 'array',
+        'skills'      => 'array',
+        'programming' => 'array',
+        'projects'    => 'array',
     ];
 
-    // ==================== Relationship to User ==================== //
-    public function user()
+    // Awards are a relationship
+    public function awardFiles()
     {
-        return $this->belongsTo(User::class);
+        return $this->hasMany(AwardFile::class, 'resume_id');
     }
 }

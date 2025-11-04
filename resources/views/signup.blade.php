@@ -18,7 +18,7 @@
       --error: #d21414;
     }
 
-    html, body { margin:0; padding:0; height:100%; box-sizing:border-box; font-family:'Poppins', Arial, sans-serif; }
+    html, body { margin:0px; padding:0; height:100%; box-sizing:border-box; font-family:'Poppins', Arial, sans-serif; }
     *, *::before, *::after { box-sizing: inherit; }
 
     body {
@@ -45,7 +45,7 @@
       box-shadow: 0 0 18px rgba(0,0,0,0.45);
       width: 86%;
       max-width: 500px;
-      margin: 110px auto;
+      margin: 85px auto;
       display: flex;
       flex-direction: column;
       gap: 10px;

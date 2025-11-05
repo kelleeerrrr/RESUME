@@ -1,678 +1,578 @@
-@extends('layout')
+{{-- resources/views/resume_edit.blade.php (updated full file) --}}
+@php
+    use Illuminate\Support\Carbon;
+    $isNew = empty($resume) || empty($resume->id);
+@endphp
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>{{ $isNew ? 'Create Resume' : 'Edit Resume' }}</title>
 
-@section('title', 'Edit Resume | Irish Rivera')
-
-@section('content')
 <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet"/>
 
 <style>
-    /* ===== Base ===== */
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap');
+/* -------------------------
+   Colors & overall look
+   Match sign-up/login/welcome vibes (soft pink gradients)
+   ------------------------- */
+:root{
+    --pink-1: #ffe6eb;
+    --pink-2: #ffd6f6;
+    --accent-pink: #d63384;
+    --accent-pink-2: #ff66a3;
+    --container-pink: rgba(206,133,150,0.95);
+    --muted: #9aa1a8;
+    --success: #1f8a2f;
+    --danger: #e74c3c;
+}
 
-    :root{
-        --accent-pink: #ff1f84;
-        --accent-pink-2: #ff66a3;
-        --muted: #9aa1a8;
-        --soft-white: #fbfbff;
-        --danger: #e74c3c;
-    }
+/* page background aligned with welcome/login */
+html,body{height:100%; margin:0; font-family:"Poppins",sans-serif; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
+body{
+    background: linear-gradient(135deg, var(--pink-1), var(--pink-2));
+    color:#222;
+    min-height:100vh;
+}
 
-    body {
-        font-family: "Poppins", sans-serif;
-        background-color: #f9f9f9; 
-        transition: background 0.3s, color 0.3s;
-        -webkit-font-smoothing:antialiased;
-        -moz-osx-font-smoothing:grayscale;
-    }
-    body.dark {
-        background-color: #1b1b1b;
-        color: #f5f5f5;
-    }
+/* container card uses the same container-pink with subtle white panel */
+.container {
+    max-width: 950px;
+    margin: 40px auto;
+    position: relative;
+    overflow: visible;
+    border-radius: 18px;
+    padding: 34px;
+    transition: background 0.3s, color 0.3s, transform 0.12s;
+    border: 1px solid rgba(16,24,40,0.04);
+    background: linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,245,248,0.9));
+    box-shadow: 0 18px 40px rgba(16,24,40,0.06), inset 0 -6px 24px rgba(255,31,132,0.02);
+}
 
-    .container {
-        max-width: 900px;
-        margin: 40px auto;
-        position: relative;
-        overflow: visible;
-        border-radius: 18px;
-        padding: 34px;
-        color: #d70b67ff;
-        transition: background 0.3s, color 0.3s, transform 0.12s;
-        border: 1px solid rgba(16,24,40,0.04);
+/* subtle hover lift */
+.container:hover { transform: translateY(-6px); box-shadow: 0 28px 50px rgba(16,24,40,0.08); }
 
-        background: linear-gradient(135deg, rgba(212, 170, 185, 0.95) 0%, rgba(248, 198, 217, 0.9) 50%, rgba(255,241,245,0.95) 100%);
-        box-shadow: 0 18px 40px rgba(16,24,40,0.06), inset 0 -6px 24px rgba(255,31,132,0.01);
-        animation: fadeInUp 600ms ease both;
-    }
+/* decorative soft pink bubbles (kept) */
+.bubble{ position:absolute;border-radius:50%;opacity:0.12;filter:blur(6px);pointer-events:none;mix-blend-mode:screen; }
+.b1{ width:120px;height:120px; left:12%; top:2%; background: radial-gradient(circle at 30% 30%, rgba(255,115,165,0.18), rgba(255,200,220,0.06)); }
+.b2{ width:90px;height:90px; right:6%; top:14%; background: radial-gradient(circle at 30% 30%, rgba(255,200,220,0.14), rgba(255,115,165,0.04)); }
+.b3{ width:60px;height:60px; left:6%; bottom:12%; background: radial-gradient(circle at 30% 30%, rgba(255,115,165,0.12), rgba(255,200,220,0.03)); }
+.b4{ width:40px;height:40px; right:22%; bottom:6%; background: radial-gradient(circle at 30% 30%, rgba(255,115,165,0.10), rgba(255,200,220,0.02)); }
+.b5{ width:180px;height:180px; left:50%; top:-30px; background: radial-gradient(circle at 30% 30%, rgba(255,115,165,0.06), rgba(255,200,220,0.02)); }
 
-    .container:hover { transform: translateY(-6px); box-shadow: 0 28px 50px rgba(16,24,40,0.08); }
+/* header + back button */
+/* UPDATED .back-btn so entire pill is clickable and above the title */
+.back-btn {
+  position: absolute;
+  left: 18px;
+  top: 18px;
+  display: inline-flex;                 /* makes the whole box clickable */
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;                  /* larger hit area */
+  border-radius: 12px;
+  background: linear-gradient(90deg,var(--accent-pink),var(--accent-pink-2));
+  color: #fff;
+  border: none;
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(214,49,104,0.12);
+  z-index: 9999;                        /* sit above centered title */
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+}
+.back-btn:hover,
+.back-btn:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 40px rgba(214,49,104,0.16);
+  opacity: 0.98;
+  outline: 2px solid rgba(255,255,255,0.06);
+}
+.back-btn .back-arrow,
+.back-btn .back-text { pointer-events: none; }
 
-    body.dark .container {
-        background: linear-gradient(135deg, rgba(97, 94, 95, 0.6) 0%, rgba(119, 109, 119, 0.6) 60%);
-        box-shadow: 0 18px 40px rgba(0,0,0,0.6);
-        border: 1px solid rgba(255,255,255,0.03);
-    }
+/* header centered */
+.header-row { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:8px; position:relative; }
+.title-wrap { text-align:center; }
+h1 { color: var(--accent-pink); margin:0; font-weight:800; letter-spacing:-0.3px; }
+.subtitle { color: rgba(107,42,74,0.9); margin-top:6px; margin-bottom:8px; }
 
-    /* Floating decorative bubbles inside container */
-    .bubble {
-        position: absolute;
-        border-radius: 50%;
-        opacity: 0.14;
-        filter: blur(6px);
-        pointer-events: none;
-        transform: translate3d(0,0,0);
-        mix-blend-mode: screen;
-        animation: bubbleFloat linear infinite;
-    }
+/* success banner (green) — appears under title */
+#successBanner {
+    display:none;
+    margin: 12px 0 18px 0;
+    padding:10px 14px;
+    border-radius:10px;
+    background: linear-gradient(90deg,#e6f9ea,#dff3df);
+    color: #0b5f2a;
+    font-weight:700;
+    border:1px solid rgba(30,120,60,0.08);
+}
 
-    /* different sizes & positions */
-    .bubble.b1 { width: 120px; height: 120px; left: 18%; top: 6%; background: radial-gradient(circle at 30% 30%, rgba(255,31,132,0.18), rgba(255,102,163,0.06)); animation-duration: 12s; }
-    .bubble.b2 { width: 90px; height: 90px; right: 6%; top: 18%; background: radial-gradient(circle at 30% 30%, rgba(255,102,163,0.14), rgba(255,31,132,0.04)); animation-duration: 10s; }
-    .bubble.b3 { width: 60px; height: 60px; left: 8%; bottom: 12%; background: radial-gradient(circle at 30% 30%, rgba(255,31,132,0.12), rgba(255,102,163,0.03)); animation-duration: 8s; }
-    .bubble.b4 { width: 40px; height: 40px; right: 22%; bottom: 6%; background: radial-gradient(circle at 30% 30%, rgba(255,31,132,0.10), rgba(255,102,163,0.02)); animation-duration: 14s; }
-    .bubble.b5 { width: 180px; height: 180px; left: 50%; top: -30px; background: radial-gradient(circle at 30% 30%, rgba(255,31,132,0.06), rgba(255,102,163,0.02)); animation-duration: 18s; }
+/* inputs and sections */
+label{ font-weight:600; margin-top:10px; display:block; }
+input[type="text"], input[type="email"], input[type="date"], textarea, select {
+    width:100%;
+    padding:10px 12px;
+    margin:5px 0 15px 0;
+    border-radius:10px;
+    border:1px solid rgba(16,24,40,0.06);
+    transition:all 0.18s;
+    font-size:0.95rem;
+    background:#fff;
+    box-shadow: inset 0 -2px 8px rgba(16,24,40,0.02);
+}
+input::placeholder, textarea::placeholder { color:#bfc6cc; }
+input:focus, textarea:focus, select:focus { border-color: var(--accent-pink); outline:none; box-shadow: 0 10px 30px rgba(255,115,165,0.08); transform: translateY(-1px); }
 
-    body.dark .bubble { opacity: 0.12; filter: blur(8px); }
+/* date input styling: keep consistent with others */
+input[type="date"]::-webkit-inner-spin-button,
+input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
 
-    @keyframes bubbleFloat {
-        0% { transform: translateY(0) translateX(0) scale(1); }
-        50% { transform: translateY(-14px) translateX(6px) scale(1.03); }
-        100% { transform: translateY(0) translateX(0) scale(1); }
-    }
+/* sections */
+.section { margin-bottom:22px; padding:18px; border-radius:12px; background-color: rgba(255,255,255,0.96); box-shadow:0 8px 26px rgba(16,24,40,0.04); display:none; opacity:0; transform:translateY(8px); transition:opacity 0.36s, transform 0.36s; border-top:1px solid rgba(16,24,40,0.03); }
+.section.visible { display:block; opacity:1; transform:translateY(0); }
+.section:hover { box-shadow:0 18px 40px rgba(255,115,165,0.06); }
 
-    /* ===== Headings & small touches ===== */
-    h1 {
-        color: #d41467ff;
-        text-align: center;
-        font-weight: 700;
-        margin-bottom: 12px;
-        text-shadow: 0 6px 20px rgba(223, 52, 100, 0.71);
-        letter-spacing: -0.3px;
-    }
-    body.dark h1 { color: #ff66a3; }
+/* array input layout */
+.array-input { display:flex; gap:10px; margin-bottom:8px; flex-wrap:wrap; align-items:center; }
+.array-input input { flex:1; min-width:140px; }
 
-    .subtitle { text-align:center; color: #fffff; margin-bottom: 18px; }
+/* buttons */
+.btn { display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:10px; text-decoration:none; font-weight:600; border:none; cursor:pointer; color:white; transition: transform 0.12s, box-shadow 0.12s; }
+.btn:hover { transform: translateY(-3px); }
+.btn-save { background: linear-gradient(90deg,var(--accent-pink),var(--accent-pink-2)); box-shadow: 0 12px 36px rgba(214,49,104,0.14); }
+.btn-add { background: linear-gradient(90deg,#ff8fcf,#ff4da6); box-shadow: 0 10px 30px rgba(255,77,166,0.10); }
+.btn-remove { background: linear-gradient(90deg,#ff7b7b,#e74c3c); box-shadow: 0 10px 28px rgba(231,76,60,0.10); }
 
-    label {
-        font-weight: 600;
-        margin-top: 10px;
-        display: block;
-    }
+/* profile preview */
+#profile-preview { width:150px; height:150px; border-radius:50%; object-fit:cover; border:3px solid var(--accent-pink); box-shadow: 0 12px 36px rgba(255,115,165,0.08); margin-bottom:10px; }
 
-    /* ===== Inputs ===== (kept same logic, just look) */
-    input[type="text"], input[type="email"], textarea, select {
-        width: 100%;
-        padding: 10px 12px;
-        margin: 5px 0 15px 0;
-        border-radius: 10px;
-        border: 1px solid rgba(16,24,40,0.06);
-        transition: all 0.18s;
-        font-size: 0.95rem;
-        background: #fff;
-        box-shadow: inset 0 -2px 8px rgba(16,24,40,0.02);
-    }
-    body.dark input, body.dark textarea, body.dark select {
-        background: #151515;
-        color: #e9eef2;
-        border: 1px solid rgba(255,255,255,0.04);
-        box-shadow: none;
-    }
+/* modals */
+#cropper-modal{ display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.72); justify-content:center; align-items:center; z-index:9999; padding:28px; }
+#cropper-container{ background:white; padding:20px; border-radius:10px; width:420px; max-width:95%; display:flex; flex-direction:column; align-items:center; box-shadow:0 22px 48px rgba(16,24,40,0.16); border:1px solid rgba(16,24,40,0.05); }
+#cropper-image{ max-width:100%; max-height:320px; border-radius:6px; }
 
-    input::placeholder, textarea::placeholder { color: #bfc6cc; }
+#file-modal{ display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.72); justify-content:center; align-items:center; z-index:10000; padding:20px; }
+#file-modal .fm-content { position:relative; width:80%; max-width:900px; background:#fff; border-radius:12px; padding:12px; box-shadow:0 24px 60px rgba(0,0,0,0.5); display:flex; flex-direction:column; gap:10px; overflow:hidden; }
+#file-modal img{ width:100%; height:auto; max-height:80vh; object-fit:contain; display:block; }
+#file-modal iframe{ width:100%; height:80vh; border:none; }
+#file-modal-close{ position:absolute; top:10px; right:10px; z-index:101; border-radius:8px; padding:8px 12px; }
 
-    input:focus, textarea:focus, select:focus {
-        border-color: var(--accent-pink);
-        outline: none;
-        box-shadow: 0 10px 30px rgba(255,31,132,0.10);
-        transform: translateY(-1px);
-    }
+/* unsaved changes modal */
+#unsavedModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:12000; align-items:center; justify-content:center; padding:18px; }
+#unsavedModal .card { background:#fff; padding:18px; border-radius:10px; max-width:420px; text-align:center; color:#111; }
+#unsavedModal .actions { margin-top:14px; display:flex; gap:10px; justify-content:center; }
 
-    textarea { min-height: 80px; resize:vertical; }
+/* small toast fallback */
+#max-toast { position:fixed; left:50%; transform:translateX(-50%) translateY(12px); bottom:22px; background:rgba(32,32,32,0.94); color:#fff; padding:10px 14px; border-radius:10px; z-index:11000; opacity:0; pointer-events:none; transition:opacity .18s, transform .18s; }
+#max-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
 
-    /* ===== Section cards (soft separators + hover glow) ===== */
-    .section {
-        margin-bottom: 22px;
-        padding: 18px;
-        border-radius: 12px;
-        background-color: rgba(255,255,255,0.95); /* still slightly tinted */
-        box-shadow: 0 8px 26px rgba(16,24,40,0.04);
-        display: none;
-        opacity: 0;
-        transform: translateY(8px);
-        transition: opacity 0.36s ease, transform 0.36s ease, box-shadow 0.18s ease;
-        border-top: 1px solid rgba(16,24,40,0.03);
-    }
-    body.dark .section {
-        background-color: #2c2c2c;
-        border-top: 1px solid rgba(255,255,255,0.02);
-        box-shadow: 0 8px 26px rgba(0,0,0,0.6);
-    }
-    .section.visible {
-        display:block;
-        opacity:1;
-        transform: translateY(0);
-        animation: fadeIn 420ms ease both;
-    }
-
-    /* hover glow for the section */
-    .section:hover {
-        box-shadow: 0 18px 40px rgba(255,31,132,0.06);
-        border-top-color: rgba(255,31,132,0.04);
-    }
-    body.dark .section:hover {
-        box-shadow: 0 18px 40px rgba(255,66,130,0.06);
-        border-top-color: rgba(255,66,163,0.03);
-    }
-
-    .section h2 { color: #c8205eff; margin-top:0; }
-    body.dark .section h2 { color: #f3f3f3; }
-
-    /* array input layout */
-    .array-input {
-        display:flex;
-        gap:10px;
-        margin-bottom: 8px;
-        flex-wrap:wrap;
-        align-items:center;
-    }
-    .array-input input { flex:1; min-width:140px; }
-
-    /* ===== Buttons: improved gradients + shadow glow ===== */
-    .btn {
-        display:inline-flex;
-        align-items:center;
-        gap:8px;
-        padding:10px 18px;
-        border-radius:10px;
-        text-decoration:none;
-        font-weight:600;
-        border:none;
-        cursor:pointer;
-        color:white;
-        transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s;
-    }
-    .btn:hover { transform: translateY(-3px); }
-
-    .btn-save {
-        background: linear-gradient(90deg, var(--accent-pink), var(--accent-pink-2));
-        box-shadow: 0 12px 36px rgba(255,31,132,0.14), 0 6px 20px rgba(255,102,163,0.06);
-    }
-    .btn-save:active { transform: translateY(-1px) scale(0.995); }
-
-    .btn-add {
-        background: linear-gradient(90deg, #ff8fcf, #ff4da6);
-        box-shadow: 0 10px 30px rgba(255,77,166,0.10);
-    }
-
-    .btn-remove {
-        background: linear-gradient(90deg, #ff7b7b, #e74c3c);
-        box-shadow: 0 10px 28px rgba(231,76,60,0.10);
-    }
-
-    /* small muted helper */
-    .small-muted { font-size:0.9rem; color:var(--muted); }
-
-    /* profile preview */
-    #profile-preview {
-        width:150px;
-        height:150px;
-        border-radius:50%;
-        object-fit:cover;
-        border:3px solid var(--accent-pink);
-        box-shadow: 0 12px 36px rgba(255,31,132,0.08);
-        margin-bottom:10px;
-    }
-    body.dark #profile-preview { border-color: rgba(255,102,163,0.16); box-shadow: 0 12px 36px rgba(0,0,0,0.6); }
-
-    /* section-filter style */
-    #section-filter {
-        font-size:1rem;
-        padding:12px;
-        margin-bottom:20px;
-        background-color:#fff;
-        border-radius:10px;
-        border:1px solid rgba(16,24,40,0.05);
-    }
-    body.dark #section-filter { background:#171717; border:1px solid rgba(255,255,255,0.03); color:#e9eef2; }
-
-    /* Cropper modal styling kept, but tuned for glow */
-    #cropper-modal {
-        display: none;
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.72);
-        justify-content: center;
-        align-items: center;
-        z-index: 9999;
-        padding: 28px;
-    }
-    #cropper-container {
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        width: 420px;
-        max-width: 95%;
-        display:flex;
-        flex-direction:column;
-        align-items:center;
-        box-shadow: 0 22px 48px rgba(16,24,40,0.16);
-        border:1px solid rgba(16,24,40,0.05);
-    }
-    body.dark #cropper-container { background:#222; border:1px solid rgba(255,255,255,0.03); box-shadow: 0 22px 48px rgba(0,0,0,0.6); }
-    #cropper-image { max-width:100%; max-height:320px; border-radius:6px; }
-
-    /* File preview modal (for awards) */
-    #file-modal {
-        display: none;
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.72);
-        justify-content: center;
-        align-items: center;
-        z-index: 10000;
-        padding: 20px;
-    }
-    #file-modal .fm-content {
-        position: relative;
-        width: 80%;
-        max-width: 900px;
-        background: #fff;
-        border-radius: 12px;
-        padding: 12px;
-        box-shadow: 0 24px 60px rgba(0,0,0,0.5);
-        display:flex;
-        flex-direction:column;
-        gap:10px;
-        overflow: hidden;
-    }
-    #file-modal .fm-body { flex:1; min-height:300px; display:flex; align-items:center; justify-content:center; }
-    /* Make images fit without scrollbars */
-    #file-modal img {
-        width: 100%;
-        height: auto;
-        max-height: 80vh;
-        object-fit: contain;
-        display: block;
-    }
-    /* PDF iframe sizing */
-    #file-modal iframe {
-        width: 100%;
-        height: 80vh;
-        border: none;
-    }
-    /* top-right close button */
-    #file-modal-close {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        z-index: 101;
-        border-radius: 8px;
-        padding: 8px 12px;
-    }
-    /* hide bottom actions (we use the top-right button) */
-    #file-modal .fm-actions { display: none; }
-
-    /* fade and lift animations */
-    @keyframes fadeInUp {
-        0% { opacity: 0; transform: translateY(14px); }
-        100% { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeIn {
-        0% { opacity:0; transform: translateY(8px); }
-        100% { opacity:1; transform: translateY(0); }
-    }
-
-    /* Toast for maxlength reached */
-    #max-toast {
-        position: fixed;
-        left: 50%;
-        transform: translateX(-50%) translateY(12px);
-        bottom: 22px;
-        background: rgba(32,32,32,0.94);
-        color: #fff;
-        padding: 10px 14px;
-        border-radius: 10px;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-        z-index: 11000;
-        font-weight: 600;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity .18s ease, transform .18s ease;
-    }
-    #max-toast.show {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0);
-        pointer-events: auto;
-    }
-
-    /* Respect reduced motion */
-    @media (prefers-reduced-motion: reduce) {
-        .container, .section, .bubble { animation: none !important; transition: none !important; transform: none !important; }
-    }
-
-    /* Responsive tweaks */
-    @media (max-width:880px){
-        .container { margin:24px 18px; padding:20px; }
-    }
-    @media (max-width:560px){
-        .array-input { flex-direction:column; align-items:stretch; }
-    }
+/* responsive tweaks */
+@media (max-width:880px){ .container{ margin:24px 18px; padding:20px } .back-btn{ left:12px; top:14px; padding:8px 12px; border-radius:10px } }
 </style>
+</head>
+<body>
 
-<div class="container">
-    <!-- decorative bubbles inside the container (purely visual) -->
+<div class="container" role="main" aria-labelledby="pageTitle">
+    <!-- bubbles -->
     <div class="bubble b1" aria-hidden="true"></div>
     <div class="bubble b2" aria-hidden="true"></div>
     <div class="bubble b3" aria-hidden="true"></div>
     <div class="bubble b4" aria-hidden="true"></div>
     <div class="bubble b5" aria-hidden="true"></div>
 
-    <h1>Edit Your Resume</h1>
-    <p class="subtitle">Update your details — profile, education, skills, projects and more.</p>
+    <!-- Back to Home + Title -->
+    <!-- UPDATED: full pill clickable (arrow + text) -->
+    <a href="{{ route('home') }}" id="backBtn" class="back-btn" title="Back to Home" role="link" aria-label="Back to Home">
+      <span class="back-arrow">←</span>
+      <span class="back-text">Back</span>
+    </a>
 
-    @if(session('success'))
-        <p style="color:green;">{{ session('success') }}</p>
-    @endif
+    <div class="header-row">
+        <div class="title-wrap">
+            <h1 id="pageTitle">{{ $isNew ? 'Create Your Resume' : 'Edit Your Resume' }}</h1>
+            <p class="subtitle">{{ $isNew ? 'Start building your public resume.' : 'Update your details — profile, education, skills, projects and more.' }}</p>
+        </div>
+    </div>
 
-    <form id="resume-form" action="{{ route('resume.update', ['id' => $resume->id]) }}" method="POST" enctype="multipart/form-data">
-        @csrf
+    <!-- Success banner (green) -->
+    <div id="successBanner" role="status" aria-live="polite">{{ session('success') ?? '' }}</div>
+
+    <script>
+      (function(){
+        @if(session('success'))
+          document.addEventListener('DOMContentLoaded', function(){
+            const b = document.getElementById('successBanner');
+            if(b){
+              b.style.display = 'block';
+              setTimeout(()=> { b.style.transition = 'opacity .4s'; b.style.opacity = '0'; setTimeout(()=> b.style.display='none', 400); }, 4000);
+            }
+          });
+        @endif
+      })();
+    </script>
+
+    {{-- Form --}}
+    @if($isNew)
+      <form id="resume-form" action="{{ route('resume.store') }}" method="POST" enctype="multipart/form-data">
+    @else
+      <form id="resume-form" action="{{ route('resume.update', ['id' => $resume->id]) }}" method="POST" enctype="multipart/form-data">
         @method('PUT')
+    @endif
+    @csrf
 
-        {{-- Profile + Personal Info always visible --}}
-        <div class="section visible" data-section="profile">
-            <h2>Profile Picture</h2>
-            <img id="profile-preview" src="{{ $resume->profile_photo ? asset('storage/'.$resume->profile_photo) : 'https://via.placeholder.com/150' }}" alt="Profile Preview">
-            <input type="file" id="profile-input" accept="image/*">
+    <p class="small-muted" style="text-align:center; margin-bottom:16px;">Tip: Make sure your resume reflects your latest achievements. You can save whenever you've made a change.</p>
 
-            {{-- Hidden input that contains the cropped image as data URL. Controller should detect and save if present on final form submit. --}}
-            <input type="hidden" name="cropped_image" id="cropped_image" value="">
-        </div>
+    {{-- Profile --}}
+    <div class="section visible" data-section="profile">
+        <h2>Profile Picture</h2>
+        <img id="profile-preview" src="{{ old('cropped_image') ?: (!empty($resume->profile_photo) ? asset('storage/'.$resume->profile_photo) : 'https://via.placeholder.com/150') }}" alt="Profile Preview">
+        <input type="file" id="profile-input" accept="image/*" aria-label="Upload profile photo">
+        <input type="hidden" name="cropped_image" id="cropped_image" value="{{ old('cropped_image', '') }}">
+    </div>
 
-        <div class="section visible" data-section="personal">
-            <h2>Personal Information</h2>
-            <label>Full Name</label>
-            <input type="text" name="fullname" value="{{ $resume->fullname ?? '' }}" required>
+    {{-- Personal info (DOB uses calendar) --}}
+    <div class="section visible" data-section="personal">
+        <h2>Personal Information</h2>
+        <label>Full Name</label>
+        <input type="text" name="fullname" value="{{ old('fullname', $resume->fullname ?? '') }}" required>
 
-            <label>Date of Birth</label>
-            <input type="text" name="dob" value="{{ $resume->dob ?? '' }}">
+        <label>Date of Birth</label>
+        <input type="date" name="dob" id="dob" value="{{ old('dob', isset($resume->dob) ? \Carbon\Carbon::parse($resume->dob)->format('Y-m-d') : '') }}" placeholder="YYYY-MM-DD">
 
-            <label>Place of Birth</label>
-            <input type="text" name="pob" value="{{ $resume->pob ?? '' }}">
+        <label>Place of Birth</label>
+        <input type="text" name="pob" value="{{ old('pob', $resume->pob ?? '') }}">
 
-            <label>Civil Status</label>
-            <input type="text" name="civil_status" value="{{ $resume->civil_status ?? '' }}">
-
-            <label>Field of Specialization</label>
-            <input type="text" name="specialization" value="{{ $resume->specialization ?? '' }}">
-
-            <label>Email</label>
-            <input type="email" name="email" value="{{ $resume->email ?? '' }}">
-
-            <label>Phone</label>
-            <input type="text" name="phone" value="{{ $resume->phone ?? '' }}">
-
-            <label>Address</label>
-            <input type="text" name="address" value="{{ $resume->address ?? '' }}">
-        </div>
-
-        {{-- Section Filter --}}
-        <label for="section-filter">Select Section to Edit:</label>
-        <select id="section-filter">
-            <option value="">Personal Information</option>
-            <option value="organization">Organization</option>
-            <option value="education">Education</option>
-            <option value="interests">Field of Interest</option>
-            <option value="skills">Skills</option>
-            <option value="programming">Programming Languages</option>
-            <option value="projects">Projects</option>
-            <option value="awards">Awards & Recognitions</option>
-            <option value="all">All Sections</option>
+        <label>Gender</label>
+        <select name="civil_status" id="civil_status">
+            <option value="">Prefer not to say</option>
+            <option value="Female" {{ old('civil_status', $resume->civil_status ?? '') === 'Female' ? 'selected' : '' }}>Female</option>
+            <option value="Male" {{ old('civil_status', $resume->civil_status ?? '') === 'Male' ? 'selected' : '' }}>Male</option>
         </select>
+        <small class="small-muted">If you choose "Prefer not to say" the gender will not appear on your public resume.</small>
 
-        {{-- ========== All other sections ========== --}}
-        <div class="section" data-section="organization">
-            <h2>Organization</h2>
-            <div id="organization-container">
-                @php $org = $resume->organization ?? []; @endphp
-                @if(!empty($org['name']))
-                    @foreach($org['name'] as $i => $name)
-                        <div class="array-input">
-                            <input type="text" name="organization[name][]" value="{{ $name }}" placeholder="Organization Name">
-                            <input type="text" name="organization[position][]" value="{{ $org['position'][$i] ?? '' }}" placeholder="Position">
-                            <input type="text" name="organization[year][]" value="{{ $org['year'][$i] ?? '' }}" placeholder="Year">
-                            <button type="button" class="btn btn-remove" onclick="this.parentElement.remove()">Remove</button>
-                        </div>
-                    @endforeach
-                @endif
-            </div>
-            <button type="button" class="btn btn-add" onclick="addOrganization()" data-section="organization">+ Add Organization</button>
+        <label>Field of Specialization</label>
+        <input type="text" name="specialization" value="{{ old('specialization', $resume->specialization ?? '') }}">
+
+        <label>Email</label>
+        <input type="email" name="email" value="{{ old('email', $resume->email ?? '') }}">
+
+        <label>Phone</label>
+        <input type="text" name="phone" value="{{ old('phone', $resume->phone ?? '') }}">
+
+        <label>Address</label>
+        <input type="text" name="address" value="{{ old('address', $resume->address ?? '') }}">
+    </div>
+
+    <label for="section-filter">Select Section to Edit:</label>
+    <select id="section-filter">
+        <option value="">Personal Information</option>
+        <option value="organization">Organization</option>
+        <option value="education">Education</option>
+        <option value="interests">Field of Interest</option>
+        <option value="skills">Skills</option>
+        <option value="programming">Programming Languages</option>
+        <option value="projects">Projects</option>
+        <option value="awards">Awards & Recognitions</option>
+        <option value="all">All Sections</option>
+    </select>
+
+    {{-- Organization --}}
+    <div class="section" data-section="organization">
+        <h2>Organization</h2>
+        <div id="organization-container">
+            @php $org = old('organization', $resume->organization ?? []); $orgNames = $org['name'] ?? []; @endphp
+            @if(!empty($orgNames))
+                @foreach($orgNames as $i => $name)
+                    <div class="array-input">
+                        <input type="text" name="organization[name][]" value="{{ $name }}" placeholder="Organization Name">
+                        <input type="text" name="organization[position][]" value="{{ $org['position'][$i] ?? '' }}" placeholder="Position">
+                        <input type="text" name="organization[year][]" value="{{ $org['year'][$i] ?? '' }}" placeholder="Year">
+                        <button type="button" class="btn btn-remove" onclick="this.parentElement.remove()">Remove</button>
+                    </div>
+                @endforeach
+            @endif
         </div>
+        <button type="button" class="btn btn-add" onclick="addOrganization()">+ Add Organization</button>
+    </div>
 
-        <div class="section" data-section="education">
-            <h2>Education</h2>
-            @php $edu = $resume->education ?? []; @endphp
-            @foreach(['Elementary','Secondary','Tertiary'] as $level)
+    {{-- Education --}}
+    <div class="section" data-section="education">
+        <h2>Education</h2>
+        @php $edu = old('education', $resume->education ?? []); @endphp
+        @foreach(['Elementary','Secondary','Tertiary'] as $level)
+            <div class="array-input">
+                <input type="text" name="education[{{ $level }}][school]" value="{{ $edu[$level]['school'] ?? '' }}" placeholder="{{ $level }} School" oninput="toggleNextInput(this)">
+                <input type="text" name="education[{{ $level }}][year]" value="{{ $edu[$level]['year'] ?? '' }}" placeholder="Year" @if(empty($edu[$level]['school'])) disabled @endif>
+            </div>
+        @endforeach
+    </div>
+
+    {{-- Interests --}}
+    <div class="section" data-section="interests">
+        <h2>Field of Interest</h2>
+        <div id="interests-container">
+            @foreach(old('interests', $resume->interests ?? []) as $interest)
                 <div class="array-input">
-                    <input type="text" name="education[{{ $level }}][school]" value="{{ $edu[$level]['school'] ?? '' }}" placeholder="{{ $level }} School" oninput="toggleNextInput(this)">
-                    <input type="text" name="education[{{ $level }}][year]" value="{{ $edu[$level]['year'] ?? '' }}" placeholder="Year" @if(empty($edu[$level]['school'])) disabled @endif>
+                    <input type="text" name="interests[]" value="{{ $interest }}" maxlength="30" placeholder="Interest (max 30 chars)">
+                    <button type="button" class="btn btn-remove" onclick="this.parentElement.remove()">Remove</button>
                 </div>
             @endforeach
         </div>
+        <button type="button" class="btn btn-add" onclick="addInput('interests-container','interests[]')">+ Add Interest</button>
+    </div>
 
-        <div class="section" data-section="interests">
-            <h2>Field of Interest</h2>
-            <div id="interests-container">
-                @foreach($resume->interests ?? [] as $interest)
-                    <div class="array-input">
-                        <input type="text" name="interests[]" value="{{ $interest }}" maxlength="30" placeholder="Interest (max 30 chars)">
-                        <button type="button" class="btn btn-remove" onclick="this.parentElement.remove()">Remove</button>
-                    </div>
-                @endforeach
-            </div>
-            <button type="button" class="btn btn-add" onclick="addInput('interests-container','interests[]')" data-section="interests">+ Add Interest</button>
-        </div>
-
-        <div class="section" data-section="skills">
-            <h2>Skills</h2>
-            <div id="skills-container">
-                @foreach($resume->skills['key'] ?? [] as $i => $skill)
-                    <div class="array-input">
-                        <input type="text" name="skills[key][]" value="{{ $skill }}" placeholder="Skill" oninput="toggleNextInput(this)" maxlength="20">
-                        <input type="text" name="skills[value][]" value="{{ $resume->skills['value'][$i] ?? '' }}" placeholder="Description" @if(empty($skill)) disabled @endif maxlength="100">
-                        <button type="button" class="btn btn-remove" onclick="this.parentElement.remove()">Remove</button>
-                    </div>
-                @endforeach
-            </div>
-            <button type="button" class="btn btn-add" onclick="addSkill()" data-section="skills">+ Add Skill</button>
-        </div>
-
-        <div class="section" data-section="programming">
-            <h2>Programming Languages</h2>
-            <div id="programming-container">
-                @foreach($resume->programming['key'] ?? [] as $i => $lang)
-                    <div class="array-input">
-                        <input type="text" name="programming[key][]" value="{{ $lang }}" placeholder="Language" oninput="toggleNextInput(this)" maxlength="15">
-                        <input type="text" name="programming[value][]" value="{{ $resume->programming['value'][$i] ?? '' }}" placeholder="Description" @if(empty($lang)) disabled @endif maxlength="50">
-                        <button type="button" class="btn btn-remove" onclick="this.parentElement.remove()">Remove</button>
-                    </div>
-                @endforeach
-            </div>
-            <button type="button" class="btn btn-add" onclick="addProgramming()" data-section="programming">+ Add Programming</button>
-        </div>
-
-        <div class="section" data-section="projects">
-            <h2>Projects</h2>
-            <div id="projects-container">
-                @foreach($resume->projects ?? [] as $project)
-                    <div class="array-input">
-                        <input type="text" name="projects[]" value="{{ $project }}">
-                        <button type="button" class="btn btn-remove" onclick="this.parentElement.remove()">Remove</button>
-                    </div>
-                @endforeach
-            </div>
-            <button type="button" class="btn btn-add" onclick="addInput('projects-container','projects[]')" data-section="projects">+ Add Project</button>
-        </div>
-
-        {{-- Awards section with Add Award inside the white container --}}
-        <div class="section" data-section="awards">
-            <h2>Awards & Recognitions</h2>
-            <div id="awards-container">
-                @php
-                    $awards = $resume->awardFiles ?? collect();
-                @endphp
-
-            @forelse($awards as $award)
+    {{-- Skills --}}
+    <div class="section" data-section="skills">
+        <h2>Skills</h2>
+        <div id="skills-container">
+            @php
+                $skillsKey = old('skills.key', $oldSkillsKey ?? []);
+                $skillsValue = old('skills.value', $oldSkillsValue ?? []);
+            @endphp
+            @foreach($skillsKey as $i => $skill)
                 <div class="array-input">
-                    {{-- Award Name --}}
-                    <input type="text" name="awards[name][]" value="{{ $award->award_name ?? '' }}" placeholder="Award Name" required>
-
-                    {{-- Certificate Upload --}}
-                    <input type="file" name="awards[file][]" accept=".pdf,.jpg,.png" class="award-file-input">
-
-                    {{-- Preserve existing file path so controller can keep it if no new file is uploaded --}}
-                    @if(!empty($award->file_path))
-                        <input type="hidden" name="awards[existing_file][]" value="{{ $award->file_path }}">
-                        {{-- View Certificate as a button that opens modal --}}
-                        <button type="button" class="btn btn-add view-certificate-btn" data-file="{{ asset('storage/'.$award->file_path) }}">View Certificate</button>
-                    @else
-                        {{-- still keep hidden placeholder so arrays align --}}
-                        <input type="hidden" name="awards[existing_file][]" value="">
-                        {{-- create a placeholder view button that will be toggled by JS when user selects a file --}}
-                        <button type="button" class="btn btn-add view-certificate-btn" style="display:none;">View Certificate</button>
-                    @endif
-
-                    {{-- Remove Button --}}
+                    <input type="text" name="skills[key][]" value="{{ $skill }}" placeholder="Skill" oninput="toggleNextInput(this)" maxlength="20">
+                    <input type="text" name="skills[value][]" value="{{ $skillsValue[$i] ?? '' }}" placeholder="Description" @if(empty($skill)) disabled @endif maxlength="100">
                     <button type="button" class="btn btn-remove" onclick="this.parentElement.remove()">Remove</button>
                 </div>
-            @empty
-                {{-- Show one empty row if no awards --}}
+            @endforeach
+        </div>
+        <button type="button" class="btn btn-add" onclick="addSkill()">+ Add Skill</button>
+    </div>
+
+    {{-- Programming --}}
+    <div class="section" data-section="programming">
+        <h2>Programming Languages</h2>
+        <div id="programming-container">
+            @php
+                $progKey = old('programming.key', $oldProgrammingKey ?? []);
+                $progValue = old('programming.value', $oldProgrammingValue ?? []);
+            @endphp
+            @foreach($progKey as $i => $lang)
                 <div class="array-input">
-                    <input type="text" name="awards[name][]" placeholder="Award Name" required>
+                    <input type="text" name="programming[key][]" value="{{ $lang }}" placeholder="Language" oninput="toggleNextInput(this)" maxlength="15">
+                    <input type="text" name="programming[value][]" value="{{ $progValue[$i] ?? '' }}" placeholder="Description" @if(empty($lang)) disabled @endif maxlength="50">
+                    <button type="button" class="btn btn-remove" onclick="this.parentElement.remove()">Remove</button>
+                </div>
+            @endforeach
+        </div>
+        <button type="button" class="btn btn-add" onclick="addProgramming()">+ Add Programming</button>
+    </div>
+
+    {{-- Projects --}}
+    <div class="section" data-section="projects">
+        <h2>Projects</h2>
+        <div id="projects-container">
+            @foreach(old('projects', $oldProjects ?? []) as $project)
+                <div class="array-input">
+                    <input type="text" name="projects[]" value="{{ $project }}">
+                    <button type="button" class="btn btn-remove" onclick="this.parentElement.remove()">Remove</button>
+                </div>
+            @endforeach
+        </div>
+        <button type="button" class="btn btn-add" onclick="addInput('projects-container','projects[]')">+ Add Project</button>
+    </div>
+
+    {{-- Awards --}}
+    <div class="section" data-section="awards">
+        <h2>Awards & Recognitions</h2>
+        <div id="awards-container">
+            @php $awardsList = $awards ?? []; @endphp
+            @if(!empty($awardsList) && count($awardsList))
+                @foreach($awardsList as $award)
+                    <div class="array-input">
+                        <input type="text" name="awards[name][]" value="{{ $award->award_name ?? '' }}" placeholder="Award Name">
+                        <input type="file" name="awards[file][]" accept=".pdf,.jpg,.png" class="award-file-input">
+                        @if(!empty($award->file_path))
+                            <input type="hidden" name="awards[existing_file][]" value="{{ $award->file_path }}">
+                            <button type="button" class="btn btn-add view-certificate-btn" data-file="{{ asset('storage/'.$award->file_path) }}">View Certificate</button>
+                        @else
+                            <input type="hidden" name="awards[existing_file][]" value="">
+                            <button type="button" class="btn btn-add view-certificate-btn" style="display:none;">View Certificate</button>
+                        @endif
+                        <button type="button" class="btn btn-remove" onclick="this.parentElement.remove()">Remove</button>
+                    </div>
+                @endforeach
+            @else
+                <div class="array-input">
+                    <input type="text" name="awards[name][]" placeholder="Award Name">
                     <input type="file" name="awards[file][]" accept=".pdf,.jpg,.png" class="award-file-input">
                     <input type="hidden" name="awards[existing_file][]" value="">
                     <button type="button" class="btn btn-add view-certificate-btn" style="display:none;">View Certificate</button>
                     <button type="button" class="btn btn-remove" onclick="this.parentElement.remove()">Remove</button>
                 </div>
-            @endforelse
-            </div>
-
-            {{-- Add Award button INSIDE awards section (visible only when section shown) --}}
-            <div style="margin-top:10px;">
-                <button id="add-award-btn" type="button" class="btn btn-add" onclick="addAward()" style="display:inline-block;">+ Add Award</button>
-            </div>
+            @endif
         </div>
 
-        <div style="text-align:center; margin-top:40px;">
-            <button id="save-btn" type="submit" class="btn btn-save">💾 Save Changes</button>
+        <div style="margin-top:10px;">
+            <button id="add-award-btn" type="button" class="btn btn-add" onclick="addAward()">+ Add Award</button>
         </div>
+    </div>
+
+    <div style="text-align:center; margin-top:40px;">
+        <button id="save-btn" type="submit" class="btn btn-save">💾 {{ $isNew ? 'Create Resume' : 'Save Changes' }}</button>
+    </div>
+
     </form>
 </div>
 
-<!-- Cropper Modal -->
+<!-- Cropper modal -->
 <div id="cropper-modal">
     <div id="cropper-container">
         <img id="cropper-image" alt="Cropper Image">
         <div style="margin-top:10px; display:flex; justify-content:center; gap:10px;">
-            <!-- set type=button so it cannot submit any forms accidentally -->
             <button id="crop-btn" type="button" class="btn btn-save">Apply</button>
             <button id="cancel-btn" type="button" class="btn btn-remove">Cancel</button>
         </div>
     </div>
 </div>
 
-<!-- File preview modal for awards -->
+<!-- File preview modal -->
 <div id="file-modal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="fm-content">
         <button id="file-modal-close" type="button" class="btn btn-remove" aria-label="Close certificate preview">Close</button>
+        <div class="fm-body" id="file-modal-body"></div>
+    </div>
+</div>
 
-        <div class="fm-body" id="file-modal-body">
-            <!-- Content injected dynamically: iframe for pdf, img for images -->
+<!-- Unsaved changes modal -->
+<div id="unsavedModal" aria-hidden="true">
+    <div class="card" role="dialog" aria-labelledby="unsavedTitle">
+        <h3 id="unsavedTitle">You have unsaved changes</h3>
+        <p>Are you sure you want to leave this page? Your changes will be lost.</p>
+        <div class="actions">
+            <button id="leaveBtn" class="btn btn-remove">Leave</button>
+            <button id="stayBtn" class="btn btn-save">Stay & Save</button>
         </div>
     </div>
 </div>
 
-<!-- Toast for maxlength -->
+<!-- Max toast -->
 <div id="max-toast" aria-live="polite" role="status"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
 <script>
-let cropper;
+/* ============================
+   JS: cropper, dynamic inputs,
+   file preview, unsaved-changes
+   ============================ */
+
+let cropper = null;
 const input = document.getElementById('profile-input');
 const preview = document.getElementById('profile-preview');
 const modal = document.getElementById('cropper-modal');
 const cropperImage = document.getElementById('cropper-image');
 const croppedInput = document.getElementById('cropped_image');
 const resumeForm = document.getElementById('resume-form');
-
-// BASE for storage assets (so JS can build full URLs for existing storage-relative paths)
 const STORAGE_BASE = "{{ asset('storage') }}";
 
-// prevent Enter from submitting the form unexpectedly.
-// Allow Enter in textarea, but prevent in single-line inputs.
-resumeForm.addEventListener('keydown', function(e){
-    const tag = e.target.tagName.toLowerCase();
-    const type = e.target.type ? e.target.type.toLowerCase() : '';
-    if(e.key === 'Enter' && tag !== 'textarea' && type !== 'submit' && type !== 'button') {
-        e.preventDefault();
-    }
-});
+// isDirty tracking
+let isDirty = false;
+function markDirty(){ isDirty = true; toggleSaveVisual(true); }
 
-/* ----------------------------
-   Dependent inputs logic
-   ---------------------------- */
-// Toggle the next text input inside the same row: enable it only when the first has content.
-function toggleNextInput(el){
-    if(!el) return;
-    const row = el.closest('.array-input');
-    if(!row) return;
-    const textInputs = Array.from(row.querySelectorAll('input[type="text"]'));
-    const idx = textInputs.indexOf(el);
-    if(idx >= 0 && textInputs[idx+1]){
-        textInputs[idx+1].disabled = el.value.trim() === '';
-    }
+// visual hint on save-button when dirty (subtle)
+function toggleSaveVisual(active){
+    const btn = document.getElementById('save-btn');
+    if(!btn) return;
+    if(active) btn.style.boxShadow = '0 18px 46px rgba(31,138,47,0.16)';
+    else btn.style.boxShadow = '';
 }
 
-// Initialize dependent inputs on page load (so existing rows are correct)
-document.addEventListener('DOMContentLoaded', function(){
-    document.querySelectorAll('.array-input').forEach(row => {
-        const textInputs = Array.from(row.querySelectorAll('input[type="text"]'));
-        if(textInputs.length >= 2){
-            // ensure second input disabled state matches first input's current value
-            textInputs[1].disabled = textInputs[0].value.trim() === '';
-        }
-    });
+// Prevent accidental enter submit
+if(resumeForm){
+  resumeForm.addEventListener('keydown', function(e){
+      const tag = e.target.tagName.toLowerCase();
+      const type = e.target.type ? e.target.type.toLowerCase() : '';
+      if(e.key === 'Enter' && tag !== 'textarea' && type !== 'submit' && type !== 'button') {
+          e.preventDefault();
+      }
+  });
+}
 
-    // Also re-enable any description fields that have value even if the first was empty (defensive)
-    document.querySelectorAll('input[type="text"]').forEach(inp => {
-        const row = inp.closest('.array-input');
-        if(!row) return;
-        const t = Array.from(row.querySelectorAll('input[type="text"]'));
-        if(t.length >= 2){
-            // if second has content but first is empty, enable second so user can keep it
-            if(t[1].value.trim() !== '' && t[0].value.trim() === ''){
-                t[1].disabled = false;
-            }
-        }
-    });
-
-    // Initialize maxlength watcher to attach handlers to existing inputs
-    initMaxLengthWatcher();
-});
-
-// Event delegation: when user types into any first input, toggle the next one
+/* ----------------- change tracking ----------------- */
 document.addEventListener('input', function(e){
     if(!e.target) return;
-    if(e.target.matches('.array-input input[type="text"]')){
-        toggleNextInput(e.target);
+    if(!resumeForm.contains(e.target)) return;
+    const tag = e.target.tagName.toLowerCase();
+    if(tag === 'input' || tag === 'textarea' || tag === 'select') {
+        markDirty();
     }
 });
+document.addEventListener('change', function(e){
+    if(!e.target) return;
+    if(!resumeForm.contains(e.target)) return;
+    if(e.target.tagName.toLowerCase() === 'input' && e.target.type === 'file') markDirty();
+});
 
-/* ----------------------------
-   Profile cropper logic
-   ---------------------------- */
-// PROFILE CROPPER: open modal on file select, but DO NOT auto-submit
+/* ----------------- beforeunload prompt ----------------- */
+window.addEventListener('beforeunload', function(e){
+    if(!isDirty) return;
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+});
+
+/* ----------------- Back button: intercept if dirty ----------------- */
+const backBtn = document.getElementById('backBtn');
+const unsavedModal = document.getElementById('unsavedModal');
+const leaveBtn = document.getElementById('leaveBtn');
+const stayBtn = document.getElementById('stayBtn');
+
+if(backBtn){
+    backBtn.addEventListener('click', function(ev){
+        if(isDirty){
+            ev.preventDefault();
+            showUnsavedModal();
+            unsavedModal.dataset.target = this.getAttribute('href');
+            return false;
+        }
+    });
+}
+function showUnsavedModal(){
+    if(!unsavedModal) return;
+    unsavedModal.style.display = 'flex';
+    unsavedModal.setAttribute('aria-hidden','false');
+}
+function hideUnsavedModal(){
+    if(!unsavedModal) return;
+    unsavedModal.style.display = 'none';
+    unsavedModal.setAttribute('aria-hidden','true');
+}
+if(leaveBtn){
+    leaveBtn.addEventListener('click', function(){
+        const target = unsavedModal.dataset.target || "{{ route('home') }}";
+        hideUnsavedModal();
+        isDirty = false;
+        window.location.href = target;
+    });
+}
+if(stayBtn){
+    stayBtn.addEventListener('click', function(){
+        hideUnsavedModal();
+        const first = resumeForm.querySelector('input, textarea, select');
+        if(first) first.focus();
+    });
+}
+
+/* Clear dirty when form submits */
+if(resumeForm){
+    resumeForm.addEventListener('submit', function(){
+        isDirty = false;
+        const sb = document.getElementById('successBanner');
+        if(sb){
+            sb.textContent = 'Saving...';
+            sb.style.display = 'block';
+        }
+    });
+}
+
+/* ---------------------------------------
+   Profile cropper
+   --------------------------------------- */
 if(input){
   input.addEventListener('change', function(e){
       const file = e.target.files[0];
@@ -687,7 +587,7 @@ if(input){
 }
 
 document.getElementById('crop-btn').addEventListener('click', function(){
-    if(!cropper) { modal.style.display='none'; return; }
+    if(!cropper){ modal.style.display='none'; return; }
     const canvas = cropper.getCroppedCanvas({ width: 300, height: 300 });
     preview.src = canvas.toDataURL('image/png');
     croppedInput.value = canvas.toDataURL('image/png');
@@ -695,101 +595,96 @@ document.getElementById('crop-btn').addEventListener('click', function(){
     modal.setAttribute('aria-hidden','true');
     if(cropperImage.src.startsWith('blob:')) { try{ URL.revokeObjectURL(cropperImage.src); } catch(e){} }
     cropper.destroy(); cropper = null;
+    markDirty();
 });
 
 document.getElementById('cancel-btn').addEventListener('click', () => {
     modal.style.display = 'none';
     modal.setAttribute('aria-hidden','true');
-    if(cropper) { cropper.destroy(); cropper = null; }
+    if(cropper){ cropper.destroy(); cropper = null; }
+    try{ document.getElementById('profile-input').value = ''; } catch(e){}
 });
 
-/* ----------------------------
+/* ---------------------------------------
    Section filter logic
-   ---------------------------- */
+   --------------------------------------- */
 const filter = document.getElementById('section-filter');
-filter.addEventListener('change', function(){
-    const val = this.value;
-    document.querySelectorAll('.section').forEach(sec => {
-        if(val === 'all' || sec.dataset.section === val || (val === '' && (sec.dataset.section === 'profile' || sec.dataset.section === 'personal'))) {
-            sec.classList.add('visible');
-        } else {
-            sec.classList.remove('visible');
-        }
-    });
-    // Because add-award is inside awards section, it will only be visible when that section is visible
-});
+if(filter){
+  filter.addEventListener('change', function(){
+      const val = this.value;
+      document.querySelectorAll('.section').forEach(sec => {
+          if(val === 'all' || sec.dataset.section === val || (val === '' && (sec.dataset.section === 'profile' || sec.dataset.section === 'personal'))) {
+              sec.classList.add('visible');
+          } else {
+              sec.classList.remove('visible');
+          }
+      });
+  });
+}
 
-/* ----------------------------
-   Dynamic input helpers
-   ---------------------------- */
+/* ---------------------------------------
+   Dynamic helpers (kept) plus markDirty after add
+   --------------------------------------- */
 function addInput(id,name){
     const c=document.getElementById(id);
     const d=document.createElement('div');
     d.className='array-input';
     d.innerHTML=`<input type="text" name="${name}" placeholder="Enter value">\n    <button type="button" class="btn btn-remove" onclick="this.parentElement.remove()">Remove</button>`;
     c.appendChild(d);
+    markDirty();
 }
-
 function addOrganization(){
     const c=document.getElementById('organization-container');
     const d=document.createElement('div');
     d.className='array-input';
     d.innerHTML=`<input type="text" name="organization[name][]" placeholder="Organization Name">\n    <input type="text" name="organization[position][]" placeholder="Position">\n    <input type="text" name="organization[year][]" placeholder="Year">\n    <button type="button" class="btn btn-remove" onclick="this.parentElement.remove()">Remove</button>`;
     c.appendChild(d);
+    markDirty();
 }
-
 function addSkill(){
     const c=document.getElementById('skills-container');
     const d=document.createElement('div');
     d.className='array-input';
     d.innerHTML=`<input type="text" name="skills[key][]" placeholder="Skill" oninput="toggleNextInput(this)" maxlength="20">\n    <input type="text" name="skills[value][]" placeholder="Description" disabled maxlength="100">\n    <button type="button" class="btn btn-remove" onclick="this.parentElement.remove()">Remove</button>`;
     c.appendChild(d);
-
-    // attach maxlength watcher for the newly created inputs
     attachMaxWatcherToRow(d);
+    markDirty();
 }
-
 function addProgramming(){
     const c=document.getElementById('programming-container');
     const d=document.createElement('div');
     d.className='array-input';
     d.innerHTML=`<input type="text" name="programming[key][]" placeholder="Language" oninput="toggleNextInput(this)" maxlength="15">\n    <input type="text" name="programming[value][]" placeholder="Description" disabled maxlength="50">\n    <button type="button" class="btn btn-remove" onclick="this.parentElement.remove()">Remove</button>`;
     c.appendChild(d);
-
-    // attach maxlength watcher for the newly created inputs
     attachMaxWatcherToRow(d);
+    markDirty();
 }
-
-function addAward() {
+function addAward(){
     const container = document.getElementById('awards-container');
     const div = document.createElement('div');
     div.classList.add('array-input');
     div.innerHTML = `
-        <input type="text" name="awards[name][]" placeholder="Award Name" required>
+        <input type="text" name="awards[name][]" placeholder="Award Name">
         <input type="file" name="awards[file][]" accept=".pdf,.jpg,.png" class="award-file-input">
         <input type="hidden" name="awards[existing_file][]" value="">
         <button type="button" class="btn btn-add view-certificate-btn" style="display:none;">View Certificate</button>
         <button type="button" class="btn btn-remove" onclick="this.parentElement.remove()">Remove</button>
     `;
     container.appendChild(div);
+    markDirty();
 }
 
-/* -----------------------------
-   Awards: file preview modal
-   ----------------------------- */
-
+/* ---------------------------------------
+   Awards file preview logic (kept)
+   --------------------------------------- */
 const fileModal = document.getElementById('file-modal');
 const fileModalBody = document.getElementById('file-modal-body');
 const fileCloseBtn = document.getElementById('file-modal-close');
 
-// helper: open modal with given URL and type detection (pdf or image)
-// accepts optional mimeType (e.g. 'application/pdf') when previewing blob URLs
 function openFilePreview(url, mimeType = '') {
-    fileModalBody.innerHTML = ''; // clear
-
-    // prefer mimeType when provided (blob URLs won't end with .pdf)
+    if(!fileModalBody) return;
+    fileModalBody.innerHTML = '';
     const isPdf = (mimeType === 'application/pdf') || url.split('?')[0].toLowerCase().endsWith('.pdf');
-
     if (isPdf) {
         const iframe = document.createElement('iframe');
         iframe.src = url;
@@ -802,14 +697,12 @@ function openFilePreview(url, mimeType = '') {
         img.alt = 'Certificate preview';
         fileModalBody.appendChild(img);
     }
-
-    fileModal.style.display = 'flex';
-    fileModal.setAttribute('aria-hidden','false');
+    if(fileModal){
+      fileModal.style.display = 'flex';
+      fileModal.setAttribute('aria-hidden','false');
+    }
 }
 
-// Event delegation: clicking any View Certificate button should open preview.
-// Prefer dataset.blobUrl (newly selected) and its dataset.blobType for MIME detection,
-// otherwise fallback to data-file (existing storage URL).
 document.addEventListener('click', function(e){
     if(e.target.matches('.view-certificate-btn')) {
         const btn = e.target;
@@ -817,18 +710,8 @@ document.addEventListener('click', function(e){
         const blobType = btn.dataset.blobType || '';
         const storedUrl = btn.getAttribute('data-file');
 
-        if(blobUrl) {
-            // newly selected file: use blob + mime type
-            openFilePreview(blobUrl, blobType);
-            return;
-        }
-
-        if(storedUrl) {
-            // previously uploaded file: rely on extension check
-            openFilePreview(storedUrl, '');
-            return;
-        }
-        // nothing to preview
+        if(blobUrl) { openFilePreview(blobUrl, blobType); return; }
+        if(storedUrl) { openFilePreview(storedUrl, ''); return; }
     }
 });
 
@@ -836,28 +719,21 @@ document.addEventListener('change', function(e){
     if(e.target && e.target.matches('.award-file-input')) {
         const input = e.target;
         const file = input.files && input.files[0];
-        // find or create the view-certificate button in the same array-input row
         const row = input.closest('.array-input');
         if(!row) return;
         let vcBtn = row.querySelector('.view-certificate-btn');
 
-        // revoke previous blob url stored on the button if any
         if(vcBtn && vcBtn.dataset.blobUrl) {
             try { URL.revokeObjectURL(vcBtn.dataset.blobUrl); } catch(err) {}
             delete vcBtn.dataset.blobUrl;
         }
 
         if(!file) {
-            // user cleared selection: if there is an existing stored file (existing_file hidden input), keep button pointing to it
-            // otherwise hide the button
             if(vcBtn) {
                 const existingHidden = row.querySelector('input[type="hidden"][name^="awards[existing_file]"]');
                 if(existingHidden && existingHidden.value) {
-                    // Build full asset URL if existingHidden.value is storage-relative
                     let val = existingHidden.value;
-                    if(!/^https?:\/\//i.test(val)) {
-                        val = STORAGE_BASE.replace(/\/$/, '') + '/' + val.replace(/^\/+/, '');
-                    }
+                    if(!/^https?:\/\//i.test(val)) { val = STORAGE_BASE.replace(/\/$/, '') + '/' + val.replace(/^\/+/, ''); }
                     vcBtn.setAttribute('data-file', val);
                     vcBtn.style.display = 'inline-block';
                 } else {
@@ -868,140 +744,132 @@ document.addEventListener('change', function(e){
             return;
         }
 
-        // create blob url for this file and update/create button
         const blobUrl = URL.createObjectURL(file);
         if(!vcBtn) {
             vcBtn = document.createElement('button');
             vcBtn.type = 'button';
             vcBtn.className = 'btn btn-add view-certificate-btn';
             vcBtn.textContent = 'View Certificate';
-            // insert after input
             input.insertAdjacentElement('afterend', vcBtn);
         }
-        // store blob url on dataset so open handler can pick either dataset.blobUrl (new) or data-file (existing)
         vcBtn.dataset.blobUrl = blobUrl;
         vcBtn.dataset.blobType = file.type || '';
-        // remove any old data-file attribute because we now preview the newly selected file
         vcBtn.removeAttribute('data-file');
         vcBtn.style.display = 'inline-block';
+        markDirty();
     }
 });
 
-// Close file modal
-fileCloseBtn.addEventListener('click', () => {
-    fileModal.style.display = 'none';
-    fileModal.setAttribute('aria-hidden','true');
-    // revoke any blob URLs attached to view-certificate buttons to avoid memory leaks
-    document.querySelectorAll('.view-certificate-btn').forEach(b => {
-        if(b.dataset && b.dataset.blobUrl) {
-            try { URL.revokeObjectURL(b.dataset.blobUrl); } catch(err) {}
-            delete b.dataset.blobUrl;
-            delete b.dataset.blobType;
-        }
-    });
-    fileModalBody.innerHTML = '';
-});
+if(fileCloseBtn){
+  fileCloseBtn.addEventListener('click', () => {
+      if(fileModal){
+        fileModal.style.display = 'none';
+        fileModal.setAttribute('aria-hidden','true');
+      }
+      document.querySelectorAll('.view-certificate-btn').forEach(b => {
+          if(b.dataset && b.dataset.blobUrl) {
+              try { URL.revokeObjectURL(b.dataset.blobUrl); } catch(err) {}
+              delete b.dataset.blobUrl;
+              delete b.dataset.blobType;
+          }
+      });
+      if(fileModalBody) fileModalBody.innerHTML = '';
+  });
+}
 
-// Accessibility: close modals on Escape key
+/* ESC to close modals */
 document.addEventListener('keydown', function(e){
     if(e.key === 'Escape') {
-        if(modal.style.display === 'flex') {
+        if(modal && modal.style.display === 'flex') {
             modal.style.display = 'none';
             modal.setAttribute('aria-hidden','true');
             if(cropper){ cropper.destroy(); cropper=null; }
         }
-        if(fileModal.style.display === 'flex') {
+        if(fileModal && fileModal.style.display === 'flex') {
             fileModal.style.display = 'none';
             fileModal.setAttribute('aria-hidden','true');
-            // revoke any blob urls
             document.querySelectorAll('.view-certificate-btn').forEach(b => {
                 if(b.dataset && b.dataset.blobUrl) {
                     try { URL.revokeObjectURL(b.dataset.blobUrl); } catch(err) {}
                     delete b.dataset.blobUrl;
                 }
             });
-            fileModalBody.innerHTML = '';
+            if(fileModalBody) fileModalBody.innerHTML = '';
         }
     }
 });
 
-/* ----------------------------
-   Maxlength toast behavior
-   ---------------------------- */
+/* --------------------------------
+   maxlength toast (kept)
+   -------------------------------- */
 const toast = document.getElementById('max-toast');
 let toastTimer = null;
-
-// show toast with message; auto hide after 1600ms
 function showMaxToast(msg){
     if(!toast) return;
     toast.textContent = msg;
     toast.classList.add('show');
     if(toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(()=> {
-        toast.classList.remove('show');
-        toastTimer = null;
-    }, 1600);
+    toastTimer = setTimeout(()=> { toast.classList.remove('show'); toastTimer = null; }, 1600);
 }
-
-// attach watcher for inputs with maxlength in a given row element
 function attachMaxWatcherToRow(row){
     if(!row) return;
     const inputs = Array.from(row.querySelectorAll('input[type="text"]'));
     inputs.forEach(inp => {
         if(!inp.hasAttribute('maxlength')) return;
-        // ensure we only attach one listener
         if(inp._maxlengthWatcherAttached) return;
         inp._maxlengthWatcherAttached = true;
-
         inp.addEventListener('input', function(){
             const max = parseInt(inp.getAttribute('maxlength') || '0', 10);
             if(max > 0 && inp.value.length >= max){
-                // only trigger when reaching exact max (not on every input)
-                if(!inp.dataset._notified){
-                    inp.dataset._notified = '1';
-                    showMaxToast(`Maximum length reached (${max})`);
-                }
+                if(!inp.dataset._notified){ inp.dataset._notified = '1'; showMaxToast(`Maximum length reached (${max})`); }
             } else {
-                // clear the notified flag so it can trigger again later
                 if(inp.dataset._notified) delete inp.dataset._notified;
             }
         });
-
-        // also watch paste events (to catch paste larger than maxlength)
         inp.addEventListener('paste', function(){
             setTimeout(()=> {
                 const max = parseInt(inp.getAttribute('maxlength') || '0', 10);
                 if(max > 0 && inp.value.length >= max){
-                    if(!inp.dataset._notified){
-                        inp.dataset._notified = '1';
-                        showMaxToast(`Maximum length reached (${max})`);
-                    }
+                    if(!inp.dataset._notified){ inp.dataset._notified = '1'; showMaxToast(`Maximum length reached (${max})`); }
                 }
             }, 50);
         });
     });
 }
-
-// scan and attach watchers to existing rows/inputs
 function initMaxLengthWatcher(){
     document.querySelectorAll('.array-input').forEach(row => attachMaxWatcherToRow(row));
-
-    // also attach to independently-added single inputs like interests (they may not be in pair rows)
     document.querySelectorAll('input[type="text"][maxlength]').forEach(inp => {
         const parentRow = inp.closest('.array-input');
         if(parentRow) attachMaxWatcherToRow(parentRow);
-        else attachMaxWatcherToRow(document.createElement('div')); // no-op but ensures code runs
+        else attachMaxWatcherToRow(document.createElement('div'));
     });
 }
+document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('.array-input').forEach(row => {
+        const textInputs = Array.from(row.querySelectorAll('input[type="text"]'));
+        if(textInputs.length >= 2){
+            textInputs[1].disabled = textInputs[0].value.trim() === '';
+        }
+        if(textInputs.length >= 2 && textInputs[1].value.trim() !== '' && textInputs[0].value.trim() === ''){
+            textInputs[1].disabled = false;
+        }
+    });
+    initMaxLengthWatcher();
+});
 
-// helper to attach watchers when rows are dynamically appended (used by addSkill/addProgramming)
-function attachWatcherToNewElements(targetNode){
-    // targetNode is the newly inserted element (row)
-    attachMaxWatcherToRow(targetNode);
+/* toggle next input */
+function toggleNextInput(el){
+    if(!el) return;
+    const row = el.closest('.array-input');
+    if(!row) return;
+    const textInputs = Array.from(row.querySelectorAll('input[type="text"]'));
+    const idx = textInputs.indexOf(el);
+    if(idx >= 0 && textInputs[idx+1]){
+        textInputs[idx+1].disabled = el.value.trim() === '';
+    }
 }
 
-// When new nodes are inserted (e.g., addSkill/addProgramming/addInput), attach watchers.
-// We'll use a MutationObserver on the containers that can get new children.
+/* observe containers to attach watchers on newly added rows */
 ['skills-container','programming-container','interests-container','projects-container','organization-container','awards-container'].forEach(id => {
     const el = document.getElementById(id);
     if(!el) return;
@@ -1016,9 +884,6 @@ function attachWatcherToNewElements(targetNode){
     });
     mo.observe(el, { childList: true });
 });
-
-// Helper: when creating awards server-side, your controller should preserve awards[existing_file][] if no new file uploaded.
-// Frontend does not overwrite existing_file hidden inputs unless user selects a new file and you process it on save.
-
 </script>
-@endsection
+</body>
+</html>

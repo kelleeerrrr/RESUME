@@ -7,7 +7,10 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use App\Models\User;
+use App\Models\Resume;
 
 class AuthController extends Controller
 {
@@ -39,14 +42,24 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = User::where('email', $request->login)
-                    ->orWhere('username', $request->login)
+        $login = $request->input('login');
+
+        // allow login by email or username
+        $user = User::where('email', $login)
+                    ->orWhere('username', $login)
                     ->first();
 
         if ($user && Hash::check($request->password, $user->password)) {
+            // store session data
             Session::put('user_id', $user->id);
             Session::put('user_name', $user->name);
-            return redirect('/home')->with('success', 'Login successful! Welcome back, ' . $user->name . '!');
+            Session::put('user_email', $user->email);
+
+            // regenerate session id to prevent session fixation
+            $request->session()->regenerate();
+
+            // redirect to intended url or /home
+            return redirect()->intended('/home')->with('success', 'Login successful! Welcome back, ' . $user->name . '!');
         }
 
         return back()->withErrors(['login' => 'Invalid username/email or password.']);
@@ -55,7 +68,13 @@ class AuthController extends Controller
     // ==================== LOGOUT ==================== //
     public function logout(Request $request)
     {
-        Session::flush();
+        // Invalidate the session (best practice)
+        $request->session()->invalidate();
+
+        // Regenerate CSRF token for safety
+        $request->session()->regenerateToken();
+
+        // Optional: clear flash message then redirect
         $request->session()->flash('logout_success', 'You have successfully logged out!');
         return redirect()->route('welcome');
     }
@@ -77,9 +96,10 @@ class AuthController extends Controller
             return back()->with('error', 'Email not registered!');
         }
 
-        $status = Password::sendResetLink(['email' => $email]);
+        $status = Password::sendResetLink($request->only('email'));
 
         if ($status === Password::RESET_LINK_SENT) {
+            // prevent spamming the endpoint in the same session
             if ($request->session()->has('password_link_sent_' . $email)) {
                 return back()->with('already_sent', 'Reset link already sent. Please check your email.');
             }
@@ -152,4 +172,155 @@ class AuthController extends Controller
 
         return back()->with('success', 'Your message has been sent successfully!');
     }
+
+    // ==================== UPLOAD / UPDATE PROFILE OR SPOTLIGHT PHOTO ==================== //
+    /**
+     * Accept either:
+     * - a base64 data URL in 'photo_data' (what the client cropper produces)
+     * - or a file in 'photo'
+     *
+     * Uses 'photo_type' to decide where to save:
+     *  - 'profile'  => resumes.profile_photo
+     *  - 'spotlight' => resumes.spotlight_photo (pending until resume saved)
+     *
+     * Spotlight uploads are stored temporarily in storage/app/public/temp_spotlights
+     * and the path is saved in session('pending_spotlight'). When the user clicks
+     * Save changes on the Edit Resume blade (storeResume/updateResume), move the
+     * file into profile_photos/ and attach it to the resume so updated_at reflects save.
+     */
+    public function uploadProfilePhoto(Request $request)
+    {
+        if (! session()->has('user_id')) {
+            if ($request->expectsJson()) return response()->json(['error' => 'Unauthenticated'], 401);
+            return redirect('/login');
+        }
+
+        $userId = session('user_id');
+
+        $request->validate([
+            'photo_type' => 'nullable|in:profile,spotlight',
+            'photo_data' => 'nullable|string',
+            'photo'      => 'nullable|image|mimes:jpg,jpeg,png|max:3072',
+            'resume_id'  => 'nullable|integer',
+        ]);
+
+        $photoType = $request->input('photo_type', 'profile'); // 'profile' or 'spotlight'
+        $targetColumn = ($photoType === 'spotlight') ? 'spotlight_photo' : 'profile_photo';
+
+        // If resume_id explicit provided, use it and check ownership
+        if ($request->filled('resume_id')) {
+            $resume = Resume::find($request->input('resume_id'));
+            if (! $resume) return back()->with('error', 'Resume not found.');
+            if ($resume->user_id !== $userId) abort(403);
+        } else {
+            // For spotlight uploads: DO NOT auto-create resume. For profile uploads: create if needed.
+            if ($photoType === 'spotlight') {
+                $resume = Resume::where('user_id', $userId)->first(); // may be null
+            } else {
+                $resume = Resume::firstOrNew(['user_id' => $userId]);
+                if (! $resume->exists) {
+                    $defaults = [
+                        'fullname' => session('user_name') ?? 'Unnamed User',
+                        'email' => session('user_email') ?? '',
+                        'specialization' => '',
+                        'phone' => '',
+                        'address' => '',
+                    ];
+                    $resume->fill($defaults);
+                    $resume->user_id = $userId;
+                    $resume->save();
+                }
+            }
+        }
+
+        // helper to store temp file and return path (relative to storage/app/public)
+        $saveTemp = function(string $binary, string $ext) use ($userId, $photoType) {
+            $dir = 'temp_spotlights';
+            if (! Storage::disk('public')->exists($dir)) {
+                Storage::disk('public')->makeDirectory($dir);
+            }
+            $filename = $photoType . '_' . $userId . '_' . Str::random(10) . '.' . $ext;
+            $path = $dir . '/' . $filename;
+            Storage::disk('public')->put($path, $binary);
+            return $path; // relative to public disk
+        };
+
+        // helper to store final file (profile_photos)
+        $saveFinal = function(string $binary, string $ext) use ($userId, $photoType) {
+            $dir = 'profile_photos';
+            if (! Storage::disk('public')->exists($dir)) {
+                Storage::disk('public')->makeDirectory($dir);
+            }
+            $filename = $photoType . '_' . $userId . '_' . Str::random(10) . '.' . $ext;
+            $path = $dir . '/' . $filename;
+            Storage::disk('public')->put($path, $binary);
+            return $path;
+        };
+
+        // If base64 data
+        if ($request->filled('photo_data')) {
+            $photoData = $request->input('photo_data');
+            if (! preg_match('/^data:image\/(png|jpeg|jpg);base64,/', $photoData, $matches)) {
+                return back()->with('error', 'Unsupported image format. Please upload PNG or JPEG.');
+            }
+            $base64 = preg_replace('#^data:image/\w+;base64,#i', '', $photoData);
+            $binary = base64_decode($base64);
+            if ($binary === false) return back()->with('error', 'Invalid image data.');
+            $ext = (stripos($matches[1], 'png') !== false) ? 'png' : 'jpg';
+
+            if ($photoType === 'spotlight') {
+                // Save to temp and store session pointer
+                $tempPath = $saveTemp($binary, $ext);
+                session(['pending_spotlight' => $tempPath]);
+                return back()->with('success', 'Spotlight photo uploaded and pending. Save your resume to attach it.');
+            } else {
+                // profile: save final immediately and attach to resume (resume guaranteed to exist here)
+                $finalPath = $saveFinal($binary, $ext);
+                if (! $resume) {
+                    return back()->with('error', 'Resume not found. Create your resume first.');
+                }
+                // delete old profile if exists
+                if (!empty($resume->profile_photo) && Storage::disk('public')->exists($resume->profile_photo)) {
+                    try { Storage::disk('public')->delete($resume->profile_photo); } catch (\Exception $e) {}
+                }
+                $resume->profile_photo = $finalPath;
+                $resume->save(); // normal save — will update updated_at for profile uploads
+                return back()->with('success', 'Profile photo updated!');
+            }
+        }
+
+        // Multipart upload
+        if ($request->hasFile('photo')) {
+            $validator = Validator::make($request->all(), [
+                'photo' => 'required|image|mimes:jpg,jpeg,png|max:3072',
+            ]);
+            if ($validator->fails()) {
+                if ($request->expectsJson()) return response()->json(['error' => $validator->errors()->first()], 422);
+                return back()->withErrors($validator)->withInput();
+            }
+
+            $file = $request->file('photo');
+            $ext = $file->getClientOriginalExtension();
+            $binary = file_get_contents($file->getRealPath());
+
+            if ($photoType === 'spotlight') {
+                $tempPath = $saveTemp($binary, $ext);
+                session(['pending_spotlight' => $tempPath]);
+                return back()->with('success', 'Spotlight photo uploaded and pending. Save your resume to attach it.');
+            } else {
+                if (! $resume) return back()->with('error', 'Resume not found. Create your resume first.');
+                $finalPath = $saveFinal($binary, $ext);
+                if (!empty($resume->profile_photo) && Storage::disk('public')->exists($resume->profile_photo)) {
+                    try { Storage::disk('public')->delete($resume->profile_photo); } catch (\Exception $e) {}
+                }
+                $resume->profile_photo = $finalPath;
+                $resume->save();
+                return back()->with('success', 'Profile photo updated!');
+            }
+        }
+
+        if ($request->expectsJson()) return response()->json(['error' => 'No image provided.'], 422);
+        return back()->with('error', 'No image provided.');
+    }
 }
+

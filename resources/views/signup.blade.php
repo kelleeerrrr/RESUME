@@ -1,341 +1,197 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sign Up - Community Resumes</title>
 
-  <title>Sign Up - Resume App</title>
+  <script>
+    (function () {
+      try {
+        var lsTheme = localStorage.getItem('theme');
+        var prefers = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+        var theme = lsTheme || prefers;
+        if (theme === 'dark') document.documentElement.classList.add('dark');
+        else document.documentElement.classList.remove('dark');
+      } catch (e) {}
+    })();
+  </script>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --white: #ffffff;
-      --black: #111111;
-      --pink-bg: rgba(206,133,150,0.9);
-      --input-bg: rgba(255,255,255,0.96);
-      --transition: 0.22s cubic-bezier(.2,.9,.3,1);
-      --error: #d21414;
-    }
+    :root { --pink-1: #ffe6eb; --pink-2: #ffd6f6; --accent-pink: #d63384; --container-pink: #ac4968ff; --radius: 14px; --line-grad: linear-gradient(90deg, rgba(255,115,165,1), rgba(255,200,220,1)); --transition: 0.22s ease; --error-color: #d21414; }
 
-    html, body { margin:0px; padding:0; height:100%; box-sizing:border-box; font-family:'Poppins', Arial, sans-serif; }
-    *, *::before, *::after { box-sizing: inherit; }
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{ height:100%; }
+    body{ font-family:"Poppins",sans-serif; background: linear-gradient(135deg, var(--pink-1), var(--pink-2)); color:#222; display:flex; flex-direction:column; min-height:100vh; }
+    html.dark body { background: linear-gradient(135deg, #1b0f12, #2a1420); color:#eee; }
 
-    body {
-      background: url('{{ asset("images/bg.jpg") }}') no-repeat center center fixed;
-      background-size: cover;
-      color: var(--white);
-      transition: background .32s, color .32s;
-      overflow-y: auto;
-    }
+    header{ width:100%; max-width:1200px; margin-top:28px; padding:18px 22px; display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    header .left p{ color:var(--accent-pink); font-size:2.5rem; margin:0; font-weight:700; }
 
-    html.dark body,
-    body.dark {
-      background: linear-gradient(to bottom right, #1a1a1a, #2a2a2a),
-                  url('{{ asset("images/resumebg.jpg") }}') no-repeat center center fixed;
-      background-blend-mode: multiply;
-      color: var(--white);
-    }
+    .auth{ display:flex; gap:10px; align-items:center; }
+    .auth a{ padding:10px 14px; border-radius:999px; font-weight:600; text-decoration:none; cursor:pointer; transition: transform var(--transition), box-shadow 0.2s, opacity 0.2s; color:#fff; }
+    .auth a.welcome{ background: linear-gradient(90deg,#ff5a9b,#ff3d7a); }
+    .auth a.login{ background: linear-gradient(90deg,#ff97b6,#ff6ea0); }
+    .auth a:hover{ transform:translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.15); opacity:0.9; }
 
-    .form-container {
-      background: var(--pink-bg);
-      backdrop-filter: blur(6px);
-      padding: 26px;
-      border-radius: 12px;
-      box-shadow: 0 0 18px rgba(0,0,0,0.45);
-      width: 86%;
-      max-width: 500px;
-      margin: 85px auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      color: var(--white);
-    }
+    .theme-toggle{ display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; background: rgba(255,255,255,0.9); color: #6b2a4a; font-weight:600; cursor:pointer; border:none; box-shadow:0 6px 18px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s; }
+    .theme-toggle:hover{ transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.15); }
+    html.dark .theme-toggle{ background: rgba(255,255,255,0.06); color: #f6e6ef; box-shadow: none; border:1px solid rgba(255,255,255,0.04); }
 
-    .form-container h2 { margin:0; font-size:1.6rem; text-align:center; padding-bottom:4px; display:flex; gap:10px; align-items:center; justify-content:center; }
-    form { display:flex; flex-direction:column; gap:8px; width:100%; }
+    main.hero{ margin-top:-25px; width:100%; padding:34px 20px 50px; display:flex; justify-content:center; align-items:flex-start; }
+    .card{ width:96%; max-width:1200px; background:var(--container-pink); color:#fff; border-radius:var(--radius); padding:0 28px 28px; box-shadow:0 10px 40px rgba(0,0,0,0.15); display:flex; gap:28px; align-items:flex-start; overflow:visible; position:relative; }
+    html.dark .card{ background: rgba(54, 18, 36, 0.92); }
 
-    input {
-      width:100%;
-      padding:10px 44px 10px 12px;
-      border-radius:6px;
-      border:1px solid rgba(0,0,0,0.06);
-      background: var(--input-bg);
-      color:#111;
-      font-size:0.95rem;
-      box-sizing:border-box;
-      transition: box-shadow var(--transition), transform var(--transition), border-color var(--transition);
-    }
+    .card-topline{ position:absolute; top:0; left:0; right:0; height:8px; border-top-left-radius:var(--radius); border-top-right-radius:var(--radius); background: var(--line-grad); z-index:6; }
+    html.dark .card-topline{ background: linear-gradient(90deg, rgba(200,80,140,0.9), rgba(130,60,120,0.85)); }
 
-    input:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
-    input:focus-visible {
-      outline: none;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.10), 0 0 0 3px rgba(255,255,255,0.04);
-      border-color: rgba(0,0,0,0.12);
-    }
+    .left-col{ margin: 10px; flex:1 1 640px; min-width:300px; max-width:760px; color: #fff; padding-top:20px; }
+    .left-col h1{ font-size:2rem; margin-bottom:6px; color:#fff; line-height:1.02; }
+    .left-col p{ margin-bottom:14px; color: rgba(255,255,255,0.96); font-size:1.05rem; }
 
-    .input-row { position: relative; width:100%; }
+    .inner{ background: #e03e7fff; color:#fff; border-radius:12px; padding:28px 20px; box-shadow: 0 8px 30px rgba(0,0,0,0.08); margin-bottom:18px; max-width:100%; display:flex; flex-direction:column; align-items:center; }
+    html.dark .inner{ background: rgba(116, 54, 76, 0.95); color:#fff; box-shadow:none; border:1px solid rgba(192, 192, 192, 0.03); }
 
-    .toggle-pass {
-      position:absolute;
-      right:8px;
-      top:50%;
-      transform: translateY(-50%);
-      background: transparent;
-      border: none;
-      padding:6px;
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      border-radius:6px;
-      cursor:pointer;
-      color: rgba(17,17,17,0.85);
-      transition: background var(--transition), transform var(--transition);
-      font-size:1rem;
-      z-index: 3;
-    }
-    .toggle-pass:hover { background: rgba(0,0,0,0.04); transform: translateY(-50%) scale(1.03); }
-    .toggle-pass:focus-visible { outline:none; box-shadow: 0 6px 18px rgba(0,0,0,0.12); }
+    form{ display:flex; flex-direction:column; width:100%; gap:16px; }
+    input{ width:100%; padding:12px 44px 12px 12px; border-radius:8px; border:none; font-size:0.95rem; background:#fff; color:#333; transition: border 0.2s, outline 0.2s; }
+    input:focus{ outline: 2px solid rgba(255,255,255,0.7); }
+    html.dark input{ background: rgba(240, 240, 240, 0.95); color:#333; }
 
-    .signup-btn {
-      padding:10px 12px;
-      border-radius:6px;
-      border:none;
-      background: rgba(0,0,0,0.75);
-      color: var(--white);
-      font-weight:600;
-      cursor:pointer;
-      transition: transform var(--transition), background var(--transition);
-    }
-    .signup-btn:hover { transform: translateY(-2px); background: rgba(0,0,0,0.86); }
+    .toggle-pass{ position:absolute; right:8px; top:50%; transform:translateY(-50%); background:transparent; border:none; cursor:pointer; font-size:1rem; color:#333; }
+    html.dark .toggle-pass{ color:#333; }
 
-    .link {
-      text-decoration:none;
-      display:block;
-      text-align:center;
-      font-size:0.92rem;
-      padding:6px 4px;
-      position:relative;
-      transition: color .18s, transform .18s;
-      line-height:1.1;
-      color: var(--white);
-    }
-    .link::after {
-      content: "";
-      position:absolute;
-      left:50%;
-      transform: translateX(-50%);
-      bottom:3px;
-      width:0;
-      height:2px;
-      background: currentColor;
-      border-radius:2px;
-      transition: width .18s ease;
-    }
-    .link:hover::after, .link:focus-visible::after { width:55%; }
+    .signup-btn{ padding:12px; border-radius:8px; border:none; background: linear-gradient(90deg,#ff97b6,#ff6ea0); color:#fff; font-weight:600; cursor:pointer; transition: transform var(--transition), box-shadow 0.2s, opacity 0.2s; width:100%; text-align:center; }
+    .signup-btn:hover{ transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.15); opacity:0.95; }
 
-    .login-link { color: var(--white); }
-    .login-link:hover { color: #ffe6ec; transform: translateY(-2px); }
+    .server-error{ display:none; padding:8px 10px; border-radius:8px; background: rgba(210,20,20,0.15); color: var(--error-color); font-weight:600; text-align:center; margin-bottom:10px; transition: opacity 0.2s; }
+    .server-error.active{ display:block; }
 
-    .back-welcome { color: var(--black); font-weight:500; }
-    .back-welcome:hover { color: var(--black); transform: none; }
-
-    .server-error {
-      display:none;
-      padding:8px 10px;
-      border-radius:8px;
-      background: rgba(210,20,20,0.08);
-      color: var(--error);
-      font-weight:600;
-      font-size:0.92rem;
-      text-align:center;
-    }
-    .server-error.active { display:block; }
-
-    @media (max-width:880px) {
-      .form-container { width: calc(100% - 32px); margin: 28px 16px; padding: 18px; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      * { transition: none !important; animation: none !important; transform: none !important; }
-    }
+    .right-col{ width:320px; display:flex; flex-direction:column; gap:12px; align-items:center; padding-top:18px; }
+    .placeholder-card{ width:100%; max-width:320px; border-radius:12px; padding:14px; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); box-shadow:0 10px 30px rgba(0,0,0,0.12); display:flex; flex-direction:column; gap:12px; align-items:center; color:#fff; }
+    html.dark .placeholder-card{ background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); box-shadow:none; border:1px solid rgba(255,255,255,0.03); }
+    .placeholder-photo{ width:100%; height:270px; border-radius:10px; object-fit:cover; }
+    .placeholder-title{ font-weight:700; color:#fff; text-align:center; font-size:0.95rem; }
   </style>
 </head>
 <body>
-  {{-- Top bar include --}}
-  @include('public_topbar')
 
-  <div class="form-container" role="main" aria-labelledby="signupHeading">
-    <h2 id="signupHeading"><i class="fas fa-user-plus" aria-hidden="true"></i> Sign Up</h2>
-
-    <div id="serverError" class="server-error" role="status" aria-live="polite" tabindex="-1">
-      @if ($errors->any())
-        {{ $errors->first() }}
-      @endif
+  <header>
+    <div class="left">
+      <p>Create Your Account!</p>
     </div>
+    <div class="auth">
+      <button id="themeToggle" class="theme-toggle" aria-pressed="false" title="Toggle dark mode">
+        <span id="themeIcon">🌙</span>
+        <span id="themeLabel">Dark</span>
+      </button>
+      <a href="{{ route('welcome') }}" class="welcome">Welcome</a>
+      <a href="{{ route('login') }}" class="login">Login</a>
+    </div>
+  </header>
 
-    <form id="signupForm" method="POST" action="{{ route('register.post') }}" novalidate>
-      @csrf
+  <main class="hero">
+    <div class="card">
+      <div class="card-topline"></div>
+      <div class="left-col">
+        <h1>Join Our Community!</h1>
+        <p>Sign up to get started and showcase your talents.</p>
 
-      <input id="name" name="name" type="text" placeholder="Full Name" autocomplete="name" required aria-required="true" aria-label="Full name">
-      <input id="username" name="username" type="text" placeholder="Username" autocomplete="username" required aria-required="true" aria-label="Username">
-      <input id="email" name="email" type="email" placeholder="Email" autocomplete="email" required aria-required="true" aria-label="Email">
+        <div class="inner">
+          <div id="serverError" class="server-error @if($errors->any()) active @endif">
+            @if ($errors->any()) {{ $errors->first() }} @endif
+          </div>
 
-      <div class="input-row" style="margin-top:0;">
-        <input id="password" name="password" type="password" placeholder="Password" autocomplete="new-password" required aria-required="true" aria-label="Password">
-        <button type="button" class="toggle-pass" id="togglePassword" aria-label="Show password" aria-pressed="false" tabindex="0">
-          <i class="fa-solid fa-eye" aria-hidden="true"></i>
-        </button>
+          <form id="signupForm" method="POST" action="{{ route('register.post') }}">
+            @csrf
+
+            <input id="name" name="name" type="text" placeholder="Full Name" required autocomplete="name">
+            <input id="username" name="username" type="text" placeholder="Username" required autocomplete="username">
+            <input id="email" name="email" type="email" placeholder="Email" required autocomplete="email">
+
+            <div class="input-row" style="position:relative;">
+              <input id="password" name="password" type="password" placeholder="Password" required autocomplete="new-password">
+              <button type="button" class="toggle-pass" id="togglePassword"><i class="fa-solid fa-eye"></i></button>
+            </div>
+
+            <div class="input-row" style="position:relative;">
+              <input id="password_confirmation" name="password_confirmation" type="password" placeholder="Confirm Password" required autocomplete="new-password">
+              <button type="button" class="toggle-pass" id="togglePasswordConfirm"><i class="fa-solid fa-eye"></i></button>
+            </div>
+
+            <button type="submit" class="signup-btn">Create Account</button>
+          </form>
+        </div>
       </div>
 
-      <div class="input-row" style="margin-top:0;">
-        <input id="password_confirmation" name="password_confirmation" type="password" placeholder="Confirm Password" autocomplete="new-password" required aria-required="true" aria-label="Confirm password">
-        <button type="button" class="toggle-pass" id="togglePasswordConfirm" aria-label="Show confirm password" aria-pressed="false" tabindex="0">
-          <i class="fa-solid fa-eye" aria-hidden="true"></i>
-        </button>
+      <div class="right-col">
+        <div class="placeholder-card">
+          <img src='{{ asset("images/community-photo.jpg") }}' alt="Community spotlight" class="placeholder-photo" onerror="this.onerror=null;this.src='{{ asset('default-spotlight.jpg') }}'">
+          <div class="placeholder-title">Community Spotlight</div>
+          <div style="font-size:0.9rem; color:rgba(255,255,255,0.95); text-align:center;">
+            A curated view of member highlights — log in to learn more.
+          </div>
+        </div>
       </div>
-
-      <button type="submit" class="signup-btn" aria-label="Create account">Create Account</button>
-    </form>
-
-    <a href="{{ route('login') }}" class="link login-link" aria-label="Already have an account? Login"><i class="fas fa-sign-in-alt" aria-hidden="true"></i> Already have an account? Login</a>
-    <a href="{{ route('welcome') }}" class="link back-welcome" aria-label="Back to Welcome"><i class="fas fa-home" aria-hidden="true"></i> Back to Welcome</a>
-  </div>
+    </div>
+  </main>
 
   <script>
-  (function(){
-    // ---------- Sync visual state of themeToggle ----------
-    (function syncThemeToggleVisual() {
-      var btns = document.querySelectorAll('#themeToggle');
-      if (!btns || btns.length === 0) return;
-      var isDark = (function(){
-        try { return localStorage.getItem('theme') === 'dark'; }
-        catch(e) { return document.documentElement.classList.contains('dark') || document.body.classList.contains('dark'); }
-      })();
-      btns.forEach(function(b){
-        b.textContent = isDark ? '🌞' : '🌙';
-        b.setAttribute('aria-pressed', isDark ? 'true' : 'false');
-        b.setAttribute('type','button');
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeLabel = document.getElementById('themeLabel');
+    function updateThemeUI() {
+      const isDark = document.documentElement.classList.contains('dark');
+      themeToggle.setAttribute('aria-pressed', String(isDark));
+      themeIcon.textContent = isDark ? '☀️' : '🌙';
+      themeLabel.textContent = isDark ? 'Light' : 'Dark';
+    }
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      updateThemeUI();
+    });
+    updateThemeUI();
+
+    function setupToggle(passId, toggleId){
+      const toggle = document.getElementById(toggleId);
+      const pass = document.getElementById(passId);
+      toggle?.addEventListener('click', () => {
+        const type = pass.type === 'password' ? 'text' : 'password';
+        pass.type = type;
+        toggle.querySelector('i').classList.toggle('fa-eye');
+        toggle.querySelector('i').classList.toggle('fa-eye-slash');
       });
-    })();
+    }
+    setupToggle('password', 'togglePassword');
+    setupToggle('password_confirmation', 'togglePasswordConfirm');
 
-    // Password toggle
-    (function passwordToggle(){
-      var toggle = document.getElementById('togglePassword');
-      var pass = document.getElementById('password');
-      if (!toggle || !pass) return;
+    const fields = ['name','username','email','password','password_confirmation'].map(id=>document.getElementById(id));
+    const serverError = document.getElementById('serverError');
 
-      toggle.addEventListener('click', function(){
-        var show = pass.type === 'password';
-        pass.type = show ? 'text' : 'password';
-        this.setAttribute('aria-pressed', String(show));
-        this.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
-        var icon = this.querySelector('i');
-        if (icon) {
-          icon.classList.toggle('fa-eye');
-          icon.classList.toggle('fa-eye-slash');
-          icon.classList.add('fa-solid');
+    fields.forEach(input=>{
+      input.addEventListener('invalid', (e)=>{
+        if(input.id==='email' && input.validity.typeMismatch){
+          input.setCustomValidity('Email must include @');
+        } else {
+          input.setCustomValidity('All fields are required!');
         }
       });
+      input.addEventListener('input', ()=>{ input.setCustomValidity(''); if(serverError.classList.contains('active')){ serverError.classList.remove('active'); serverError.textContent=''; } });
+    });
 
-      toggle.addEventListener('keydown', function(e){
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.click(); }
-      });
-    })();
-
-    // Password toggle confirm
-    (function passwordToggleConfirm(){
-      var toggle = document.getElementById('togglePasswordConfirm');
-      var pass = document.getElementById('password_confirmation');
-      if (!toggle || !pass) return;
-
-      toggle.addEventListener('click', function(){
-        var show = pass.type === 'password';
-        pass.type = show ? 'text' : 'password';
-        this.setAttribute('aria-pressed', String(show));
-        this.setAttribute('aria-label', show ? 'Hide confirm password' : 'Show confirm password');
-        var icon = this.querySelector('i');
-        if (icon) {
-          icon.classList.toggle('fa-eye');
-          icon.classList.toggle('fa-eye-slash');
-          icon.classList.add('fa-solid');
-        }
-      });
-
-      toggle.addEventListener('keydown', function(e){
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.click(); }
-      });
-    })();
-
-    // Form validation & UX helpers
-    (function formValidation(){
-      var form = document.getElementById('signupForm');
-      var fields = [
-        document.getElementById('name'),
-        document.getElementById('username'),
-        document.getElementById('email'),
-        document.getElementById('password'),
-        document.getElementById('password_confirmation')
-      ];
-      var serverErrorBox = document.getElementById('serverError');
-
-      fields.forEach(function(f){
-        if (!f) return;
-        f.addEventListener('input', function(){
-          if (serverErrorBox && serverErrorBox.classList.contains('active')) {
-            serverErrorBox.classList.remove('active');
-            serverErrorBox.textContent = '';
-          }
-          f.setCustomValidity('');
-        });
-      });
-
-      function setCustomEmptyMessageFirstOnly() {
-        var firstEmpty = fields.find(function(f){ return f && !f.value.trim(); });
-        fields.forEach(function(f){ if(f) f.setCustomValidity(''); });
-        if (firstEmpty) firstEmpty.setCustomValidity('All fields are required!');
+    const form = document.getElementById('signupForm');
+    form?.addEventListener('submit', (e)=>{
+      const pass = document.getElementById('password').value;
+      const confirm = document.getElementById('password_confirmation').value;
+      if(pass !== confirm){
+        e.preventDefault();
+        serverError.textContent = 'Passwords do not match.';
+        serverError.classList.add('active');
       }
-
-      if (form) {
-        form.addEventListener('submit', function(e){
-          setCustomEmptyMessageFirstOnly();
-
-          if (!form.checkValidity()) {
-            e.preventDefault();
-            form.reportValidity();
-            var firstEmpty = fields.find(function(f){ return f && !f.value.trim(); });
-            if (firstEmpty) firstEmpty.focus();
-            return false;
-          }
-
-          var p = document.getElementById('password').value;
-          var pc = document.getElementById('password_confirmation').value;
-          if (p !== pc) {
-            e.preventDefault();
-            if (serverErrorBox) {
-              serverErrorBox.textContent = 'Passwords do not match.';
-              serverErrorBox.classList.add('active');
-              serverErrorBox.focus && serverErrorBox.focus();
-            } else {
-              alert('Passwords do not match.');
-            }
-            return false;
-          }
-
-          return true;
-        });
-      }
-
-      try {
-        var serverMsg = @json($errors->first() ?? null);
-        if (serverMsg && serverErrorBox) {
-          serverErrorBox.textContent = serverMsg;
-          serverErrorBox.classList.add('active');
-        }
-      } catch(e){}
-    })();
-
-  })();
+    });
   </script>
 </body>
 </html>

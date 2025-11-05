@@ -5,14 +5,23 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Resume;
 use App\Models\AwardFile;
+use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 
 class ResumeController extends Controller
 {
-    // ==================== PUBLIC RESUME PAGE ==================== //
-    public function showPublicResume()
+    // ==================== WELCOME PAGE WITH ALL USERS ==================== //
+    public function welcome()
     {
-        $resume = Resume::with('awardFiles')->latest()->first();
+        // Fetch all users who have resumes
+        $users = User::has('resume')->get();
+        return view('welcome', compact('users'));
+    }
+
+    // ==================== SHOW PUBLIC RESUME BY USER ID ==================== //
+    public function show($id)
+    {
+        $resume = Resume::with('awardFiles')->where('user_id', $id)->firstOrFail();
         $resume->awardFiles = $resume->awardFiles ?? collect();
 
         $fields = ['organization','education','skills','programming','projects','interests'];
@@ -28,25 +37,27 @@ class ResumeController extends Controller
         return view('public_resume', compact('resume'));
     }
 
-    // ==================== WELCOME PAGE WITH PREVIEW ==================== //
-    public function publicResume()
-    {
-        $resume = Resume::with('awardFiles')->latest()->first();
-        $resume->awardFiles = $resume->awardFiles ?? collect();
-
-        return view('welcome', compact('resume'));
-    }
-
-    // ==================== VIEW LOGGED-IN USER RESUME ==================== //
+    // ==================== VIEW LOGGED-IN USER RESUME (dashboard) ==================== //
     public function resume()
     {
-        if (!AuthController::checkAuth()) return redirect('/login');
+        if (!session()->has('user_id')) return redirect('/login');
 
         $userId = session('user_id');
-        $resume = Resume::firstOrCreate(
-            ['user_id' => $userId],
-            $this->defaultResumeData($userId)
-        );
+
+        // Use firstOrNew to avoid mass-assignment pitfalls and explicitly set defaults and user_id
+        $resume = Resume::firstOrNew(['user_id' => $userId]);
+
+        if (! $resume->exists) {
+            // Apply defaults and ensure user_id is set before saving
+            $defaults = $this->defaultResumeData($userId);
+
+            // Fill only attributes allowed by fillable
+            $resume->fill($defaults);
+            $resume->user_id = $userId;
+
+            // Save newly created resume
+            $resume->save();
+        }
 
         $resume->load('awardFiles');
         $resume->awardFiles = $resume->awardFiles ?? collect();
@@ -59,10 +70,25 @@ class ResumeController extends Controller
         return view('resume', compact('resume'));
     }
 
-    // ==================== SHOW EDIT FORM ==================== //
-    public function editResume($id)
+    // ==================== CREATE (reuse edit blade) ==================== //
+    // Reuse the same edit_resume blade — when creating we pass null so blade shows empty fields.
+    public function create()
     {
-        if (!AuthController::checkAuth()) return redirect('/login');
+        if (!session()->has('user_id')) return redirect('/login');
+
+        // Pass null resume (blade handles create mode)
+        return view('edit_resume', ['resume' => null]);
+    }
+
+    // ==================== SHOW EDIT FORM (also used for create when $id is null) ==================== //
+    public function editResume($id = null)
+    {
+        if (!session()->has('user_id')) return redirect('/login');
+
+        // If no id provided, open the same edit blade for creation
+        if (empty($id)) {
+            return view('edit_resume', ['resume' => null]);
+        }
 
         $resume = Resume::with('awardFiles')
                         ->where('id', $id)
@@ -80,121 +106,21 @@ class ResumeController extends Controller
         return view('edit_resume', compact('resume'));
     }
 
-    // ==================== STORE RESUME ==================== //
+    // ==================== STORE RESUME (create new) ==================== //
     public function storeResume(Request $request)
     {
-        if (!AuthController::checkAuth()) return redirect('/login');
+        if (!session()->has('user_id')) return redirect('/login');
 
-        // Validation rules (frontend constraints mirrored on server)
-        $rules = [
-            'fullname' => 'nullable|string|max:255',
-            'dob' => 'nullable|string|max:255',
-            'pob' => 'nullable|string|max:255',
-            'civil_status' => 'nullable|string|max:255',
-            'specialization' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string|max:500',
-
-            // arrays
-            'interests' => 'nullable|array',
-            'interests.*' => 'nullable|string|max:30',
-
-            'projects' => 'nullable|array',
-            'projects.*' => 'nullable|string|max:255',
-
-            'organization.name' => 'nullable|array',
-            'organization.name.*' => 'nullable|string|max:255',
-            'organization.position' => 'nullable|array',
-            'organization.position.*' => 'nullable|string|max:255',
-            'organization.year' => 'nullable|array',
-            'organization.year.*' => 'nullable|string|max:50',
-
-            // skills: key/value arrays
-            'skills' => 'nullable|array',
-            'skills.key' => 'nullable|array',
-            'skills.key.*' => 'nullable|string|max:20',
-            'skills.value' => 'nullable|array',
-            'skills.value.*' => 'nullable|string|max:100',
-
-            // programming: key/value arrays
-            'programming' => 'nullable|array',
-            'programming.key' => 'nullable|array',
-            'programming.key.*' => 'nullable|string|max:15',
-            'programming.value' => 'nullable|array',
-            'programming.value.*' => 'nullable|string|max:50',
-        ];
-
+        $rules = $this->validationRules();
         $validated = $request->validate($rules);
 
         $resume = new Resume();
         $resume->user_id = session('user_id');
 
-        $this->saveResumeData($resume, $request);
-        $resume->save();
-
-        $this->saveAwards($resume, $request);
-
-        return redirect('/resume')->with('success', 'Resume created successfully!');
-    }
-
-    // ==================== UPDATE RESUME ==================== //
-    public function updateResume(Request $request, $id)
-    {
-        if (!AuthController::checkAuth()) return redirect('/login');
-
-        // Validation rules same as store
-        $rules = [
-            'fullname' => 'nullable|string|max:255',
-            'dob' => 'nullable|string|max:255',
-            'pob' => 'nullable|string|max:255',
-            'civil_status' => 'nullable|string|max:255',
-            'specialization' => 'nullable|string|max:255',
-            'email' => 'nullable|email|max:255',
-            'phone' => 'nullable|string|max:50',
-            'address' => 'nullable|string|max:500',
-
-            'interests' => 'nullable|array',
-            'interests.*' => 'nullable|string|max:30',
-
-            'projects' => 'nullable|array',
-            'projects.*' => 'nullable|string|max:255',
-
-            'organization.name' => 'nullable|array',
-            'organization.name.*' => 'nullable|string|max:255',
-            'organization.position' => 'nullable|array',
-            'organization.position.*' => 'nullable|string|max:255',
-            'organization.year' => 'nullable|array',
-            'organization.year.*' => 'nullable|string|max:50',
-
-            'skills' => 'nullable|array',
-            'skills.key' => 'nullable|array',
-            'skills.key.*' => 'nullable|string|max:20',
-            'skills.value' => 'nullable|array',
-            'skills.value.*' => 'nullable|string|max:100',
-
-            'programming' => 'nullable|array',
-            'programming.key' => 'nullable|array',
-            'programming.key.*' => 'nullable|string|max:15',
-            'programming.value' => 'nullable|array',
-            'programming.value.*' => 'nullable|string|max:50',
-        ];
-
-        $validated = $request->validate($rules);
-
-        $resume = Resume::where('id', $id)
-                        ->where('user_id', session('user_id'))
-                        ->firstOrFail();
-
-        // Handle cropped profile image (data URL)
-        if ($request->cropped_image) {
-            if ($resume->profile_photo && Storage::disk('public')->exists($resume->profile_photo)) {
-                Storage::disk('public')->delete($resume->profile_photo);
-            }
-
+        // Handle cropped profile image (if present) BEFORE saving so profile_photo is stored on model
+        if ($request->filled('cropped_image')) {
             if (preg_match('/^data:(image\/\w+);base64,/', $request->cropped_image, $matches)) {
-                $image = $request->cropped_image;
-                $image = preg_replace('/^data:image\/\w+;base64,/', '', $image);
+                $image = preg_replace('/^data:image\/\w+;base64,/', '', $request->cropped_image);
                 $image = str_replace(' ', '+', $image);
                 $imageName = 'resume_' . session('user_id') . '_' . time() . '.png';
                 Storage::disk('public')->put('resume_photos/' . $imageName, base64_decode($image));
@@ -205,34 +131,168 @@ class ResumeController extends Controller
         $this->saveResumeData($resume, $request);
         $resume->save();
 
+        // Attach pending spotlight if exists (from Home upload)
+        if (session()->has('pending_spotlight')) {
+            $pending = session('pending_spotlight'); // e.g. temp_spotlights/spotlight_7_xyz.png
+            if ($pending && Storage::disk('public')->exists($pending)) {
+                // ensure final dir exists
+                $finalDir = 'profile_photos';
+                if (! Storage::disk('public')->exists($finalDir)) {
+                    Storage::disk('public')->makeDirectory($finalDir);
+                }
+
+                // create final path (use same filename)
+                $finalName = basename($pending);
+                $finalPath = $finalDir . '/' . $finalName;
+
+                // move file
+                try {
+                    Storage::disk('public')->move($pending, $finalPath);
+                } catch (\Exception $e) {
+                    // if move fails, attempt to copy then delete
+                    try {
+                        $binary = Storage::disk('public')->get($pending);
+                        Storage::disk('public')->put($finalPath, $binary);
+                        Storage::disk('public')->delete($pending);
+                    } catch (\Exception $inner) {
+                        // failed to attach; clear session to avoid loop and continue
+                        session()->forget('pending_spotlight');
+                    }
+                }
+
+                // delete old spotlight if exists
+                if (!empty($resume->spotlight_photo) && Storage::disk('public')->exists($resume->spotlight_photo)) {
+                    try { Storage::disk('public')->delete($resume->spotlight_photo); } catch (\Exception $e) {}
+                }
+
+                // attach and save (this will update updated_at)
+                $resume->spotlight_photo = $finalPath;
+                $resume->save();
+
+                // clear session pointer
+                session()->forget('pending_spotlight');
+            } else {
+                // pending file missing — clear session
+                session()->forget('pending_spotlight');
+            }
+        }
+
+        // Save awards after resume exists (award handling uses resume->id)
         $this->saveAwards($resume, $request);
 
-        return redirect('/resume')->with('success', 'Resume updated successfully!');
+        // Redirect back to the edit page for the newly created resume with success message
+        return redirect()->route('resume.edit', ['id' => $resume->id])->with('success', 'Resume created successfully!');
+    }
+
+    // ==================== UPDATE RESUME ==================== //
+    public function updateResume(Request $request, $id)
+    {
+        if (!session()->has('user_id')) return redirect('/login');
+
+        $rules = $this->validationRules();
+        $validated = $request->validate($rules);
+
+        $resume = Resume::where('id', $id)
+                        ->where('user_id', session('user_id'))
+                        ->firstOrFail();
+
+        // Handle cropped profile image
+        if ($request->filled('cropped_image')) {
+            if ($resume->profile_photo && Storage::disk('public')->exists($resume->profile_photo)) {
+                try { Storage::disk('public')->delete($resume->profile_photo); } catch (\Exception $e) {}
+            }
+
+            if (preg_match('/^data:(image\/\w+);base64,/', $request->cropped_image, $matches)) {
+                $image = preg_replace('/^data:image\/\w+;base64,/', '', $request->cropped_image);
+                $image = str_replace(' ', '+', $image);
+                $imageName = 'resume_' . session('user_id') . '_' . time() . '.png';
+                Storage::disk('public')->put('resume_photos/' . $imageName, base64_decode($image));
+                $resume->profile_photo = 'resume_photos/' . $imageName;
+            }
+        }
+
+        $this->saveResumeData($resume, $request);
+        $resume->save();
+
+        // Attach pending spotlight if exists (from Home upload)
+        if (session()->has('pending_spotlight')) {
+            $pending = session('pending_spotlight'); // e.g. temp_spotlights/spotlight_7_xyz.png
+            if ($pending && Storage::disk('public')->exists($pending)) {
+                // ensure final dir exists
+                $finalDir = 'profile_photos';
+                if (! Storage::disk('public')->exists($finalDir)) {
+                    Storage::disk('public')->makeDirectory($finalDir);
+                }
+
+                // create final path (use same filename)
+                $finalName = basename($pending);
+                $finalPath = $finalDir . '/' . $finalName;
+
+                // move file
+                try {
+                    Storage::disk('public')->move($pending, $finalPath);
+                } catch (\Exception $e) {
+                    // fallback copy-then-delete
+                    try {
+                        $binary = Storage::disk('public')->get($pending);
+                        Storage::disk('public')->put($finalPath, $binary);
+                        Storage::disk('public')->delete($pending);
+                    } catch (\Exception $inner) {
+                        session()->forget('pending_spotlight');
+                    }
+                }
+
+                // delete old spotlight if exists
+                if (!empty($resume->spotlight_photo) && Storage::disk('public')->exists($resume->spotlight_photo)) {
+                    try { Storage::disk('public')->delete($resume->spotlight_photo); } catch (\Exception $e) {}
+                }
+
+                // attach and save (this will update updated_at)
+                $resume->spotlight_photo = $finalPath;
+                $resume->save();
+
+                // clear session pointer
+                session()->forget('pending_spotlight');
+            } else {
+                // pending file missing — clear session
+                session()->forget('pending_spotlight');
+            }
+        }
+
+        $this->saveAwards($resume, $request);
+
+        // Redirect back to the edit page for this resume with success message
+        return redirect()->route('resume.edit', ['id' => $resume->id])->with('success', 'Resume updated successfully!');
     }
 
     // ==================== DELETE RESUME ==================== //
     public function deleteResume($id)
     {
-        if (!AuthController::checkAuth()) return redirect('/login');
+        if (!session()->has('user_id')) return redirect('/login');
 
         $resume = Resume::where('id', $id)
                         ->where('user_id', session('user_id'))
                         ->firstOrFail();
 
         if ($resume->profile_photo && Storage::disk('public')->exists($resume->profile_photo)) {
-            Storage::disk('public')->delete($resume->profile_photo);
+            try { Storage::disk('public')->delete($resume->profile_photo); } catch (\Exception $e) {}
+        }
+
+        if ($resume->spotlight_photo && Storage::disk('public')->exists($resume->spotlight_photo)) {
+            try { Storage::disk('public')->delete($resume->spotlight_photo); } catch (\Exception $e) {}
         }
 
         foreach ($resume->awardFiles as $award) {
             if ($award->file_path && Storage::disk('public')->exists($award->file_path)) {
-                Storage::disk('public')->delete($award->file_path);
+                try { Storage::disk('public')->delete($award->file_path); } catch (\Exception $e) {}
             }
             $award->delete();
         }
 
         $resume->delete();
 
-        return redirect('/resume')->with('success', 'Resume deleted successfully!');
+        // Redirect to home/dashboard after deletion
+        return redirect()->route('home')->with('success', 'Resume deleted successfully!');
     }
 
     // ==================== DOWNLOAD RESUME ==================== //
@@ -254,7 +314,17 @@ class ResumeController extends Controller
         $resume->fullname = $request->fullname;
         $resume->dob = $request->dob;
         $resume->pob = $request->pob;
-        $resume->civil_status = $request->civil_status;
+
+        // Map gender input to civil_status column.
+        // If user chose 'prefer_not_to_say' we store null (so public resume won't show the field).
+        $gender = $request->input('gender', $request->input('civil_status', null));
+        if ($gender === 'prefer_not_to_say' || $gender === '' || $gender === null) {
+            $resume->civil_status = null;
+        } else {
+            // store the explicit selection (male/female) in civil_status column
+            $resume->civil_status = $gender;
+        }
+
         $resume->specialization = $request->specialization;
         $resume->email = $request->email;
         $resume->phone = $request->phone;
@@ -266,6 +336,7 @@ class ResumeController extends Controller
             'year' => $request->input('organization.year', []),
         ];
 
+        // Keep arrays / json consistent
         $resume->interests = $request->interests ?? [];
         $resume->education = $request->education ?? [];
         $resume->skills = $request->skills ?? [];
@@ -273,17 +344,14 @@ class ResumeController extends Controller
         $resume->projects = $request->projects ?? [];
     }
 
-    // ==================== SAVE AND SYNC AWARDS ==================== //
     private function saveAwards($resume, $request)
     {
-        // incoming arrays from the form (blade sends these names)
+        // Keep your existing award handling code
         $awardNames     = $request->input('awards.name', []);
-        $existingFiles  = $request->input('awards.existing_file', []); // storage-relative paths or empty
+        $existingFiles  = $request->input('awards.existing_file', []);
         $uploadedFiles  = $request->file('awards.file') ?? [];
 
         $processedAwardIds = [];
-
-        // Use max count to cover all indices
         $max = max(count($awardNames), count($existingFiles), count($uploadedFiles));
 
         for ($i = 0; $i < $max; $i++) {
@@ -291,12 +359,8 @@ class ResumeController extends Controller
             $existing = isset($existingFiles[$i]) ? $existingFiles[$i] : null;
             $uploaded = isset($uploadedFiles[$i]) ? $uploadedFiles[$i] : null;
 
-            // Skip empty rows
-            if (empty($name) && empty($existing) && empty($uploaded)) {
-                continue;
-            }
+            if (empty($name) && empty($existing) && empty($uploaded)) continue;
 
-            // Try to find an existing AwardFile for this resume & name
             $award = AwardFile::where('resume_id', $resume->id)
                               ->where('award_name', $name)
                               ->first();
@@ -304,39 +368,21 @@ class ResumeController extends Controller
             $filePath = null;
 
             if ($uploaded && $uploaded instanceof \Illuminate\Http\UploadedFile) {
-                // Save uploaded file
                 $fileName = 'award_' . session('user_id') . '_' . time() . '_' . $i . '.' . $uploaded->getClientOriginalExtension();
                 $filePath = $uploaded->storeAs('awards', $fileName, 'public');
 
-                // Delete old stored file if replacing
                 if ($award && $award->file_path && Storage::disk('public')->exists($award->file_path)) {
-                    try {
-                        Storage::disk('public')->delete($award->file_path);
-                    } catch (\Exception $e) {
-                        // ignore
-                    }
+                    try { Storage::disk('public')->delete($award->file_path); } catch (\Exception $e) {}
                 }
             } else {
-                // No new upload: preserve existing hidden input value if provided
-                if (!empty($existing)) {
-                    $filePath = $existing;
-                } else {
-                    // if award exists and has a file, preserve it
-                    if ($award && $award->file_path) {
-                        $filePath = $award->file_path;
-                    } else {
-                        $filePath = null;
-                    }
-                }
+                $filePath = $existing ?: ($award->file_path ?? null);
             }
 
             if ($award) {
-                // Update existing
                 $award->award_name = $name;
                 $award->file_path = $filePath;
                 $award->save();
             } else {
-                // Create new award
                 $award = AwardFile::create([
                     'resume_id' => $resume->id,
                     'award_name' => $name,
@@ -344,28 +390,20 @@ class ResumeController extends Controller
                 ]);
             }
 
-            if ($award && $award->id) {
-                $processedAwardIds[] = $award->id;
-            }
+            if ($award && $award->id) $processedAwardIds[] = $award->id;
         }
 
-        // Delete awards not submitted
         AwardFile::where('resume_id', $resume->id)
                  ->whereNotIn('id', $processedAwardIds)
                  ->get()
                  ->each(function ($award) {
                      if ($award->file_path && Storage::disk('public')->exists($award->file_path)) {
-                         try {
-                             Storage::disk('public')->delete($award->file_path);
-                         } catch (\Exception $e) {
-                             // ignore
-                         }
+                         try { Storage::disk('public')->delete($award->file_path); } catch (\Exception $e) {}
                      }
                      $award->delete();
                  });
     }
 
-    // ==================== DEFAULT RESUME DATA ==================== //
     private function defaultResumeData($userId)
     {
         return [
@@ -382,27 +420,57 @@ class ResumeController extends Controller
                 'position' => ['Member', 'Member'],
                 'year' => ['Present', 'Present']
             ],
-            'interests' => [
-                'Software Development',
-                'Artificial Intelligence',
-                'Web Development',
-                'Cybersecurity'
-            ],
+            'interests' => ['Software Development','Artificial Intelligence','Web Development','Cybersecurity'],
             'education' => [
                 ['level' => 'Elementary', 'school' => 'Tinga Itaas Elementary School', 'year' => '2017'],
                 ['level' => 'Secondary', 'school' => 'STI - Batangas', 'year' => null],
                 ['level' => 'Tertiary', 'school' => null, 'year' => null]
             ],
-            'skills' => [
-                'key' => ['Teamwork'],
-                'value' => ['Works effectively in group settings to achieve shared goals.']
-            ],
-            'programming' => [
-                'key' => ['Python'],
-                'value' => ['Used for automation, data analysis, and backend development.']
-            ],
+            'skills' => ['key' => ['Teamwork'], 'value' => ['Works effectively in group settings to achieve shared goals.']],
+            'programming' => ['key' => ['Python'], 'value' => ['Used for automation, data analysis, and backend development.']],
             'projects' => [],
             'user_id' => $userId
+        ];
+    }
+
+    private function validationRules()
+    {
+        return [
+            'fullname' => 'nullable|string|max:255',
+            'dob' => 'nullable|string|max:255',
+            'pob' => 'nullable|string|max:255',
+            // gender input (stored into civil_status column). Allowed options: female, male, prefer_not_to_say
+            'gender' => 'nullable|in:female,male,prefer_not_to_say',
+            'civil_status' => 'nullable|string|max:255',
+            'specialization' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:50',
+            'address' => 'nullable|string|max:500',
+
+            'interests' => 'nullable|array',
+            'interests.*' => 'nullable|string|max:30',
+
+            'projects' => 'nullable|array',
+            'projects.*' => 'nullable|string|max:255',
+
+            'organization.name' => 'nullable|array',
+            'organization.name.*' => 'nullable|string|max:255',
+            'organization.position' => 'nullable|array',
+            'organization.position.*' => 'nullable|string|max:255',
+            'organization.year' => 'nullable|array',
+            'organization.year.*' => 'nullable|string|max:50',
+
+            'skills' => 'nullable|array',
+            'skills.key' => 'nullable|array',
+            'skills.key.*' => 'nullable|string|max:20',
+            'skills.value' => 'nullable|array',
+            'skills.value.*' => 'nullable|string|max:100',
+
+            'programming' => 'nullable|array',
+            'programming.key' => 'nullable|array',
+            'programming.key.*' => 'nullable|string|max:15',
+            'programming.value' => 'nullable|array',
+            'programming.value.*' => 'nullable|string|max:50',
         ];
     }
 }

@@ -1,335 +1,339 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Community Resumes</title>
 
-  {{-- Pre-paint theme init --}}
+  {{-- Theme init --}}
   <script>
-    (function(){
+    (function () {
       try {
-        var params = (function(){ try { return new URLSearchParams(location.search); } catch(e){ return null; } })();
-        var qTheme = params ? params.get('theme') : null;
-
-        function readCookie(name){
-          try { var m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)')); return m ? decodeURIComponent(m[1]) : null; } catch(e){ return null; }
-        }
-
-        var cookieTheme = readCookie('theme');
-        var lsTheme = null;
-        try { lsTheme = localStorage.getItem('theme'); } catch(e){}
+        var lsTheme = localStorage.getItem('theme');
         var prefers = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
-        var theme = qTheme || cookieTheme || lsTheme || prefers;
-
+        var theme = lsTheme || prefers;
         if (theme === 'dark') document.documentElement.classList.add('dark');
         else document.documentElement.classList.remove('dark');
-      } catch(e){}
+      } catch (e) {}
     })();
   </script>
 
-  <title>Login - Resume App</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --white: #ffffff;
-      --black: #111111;
-      --black-hover: #333333;
-      --pink-bg: rgba(206,133,150,0.9);
-      --input-bg: rgba(255,255,255,0.96);
-      --transition: 0.22s cubic-bezier(.2,.9,.3,1);
-      --error: #d21414;
+    :root {
+      --pink-1: #ffe6eb;
+      --pink-2: #ffd6f6;
+      --accent-pink: #d63384;
+      --container-pink: #ac4968ff;
+      --radius: 14px;
+      --line-grad: linear-gradient(90deg, rgba(255,115,165,1), rgba(255,200,220,1));
+      --transition: 0.22s ease;
     }
 
-    html, body { margin:0; padding:0; height:100%; box-sizing:border-box; font-family:'Poppins', Arial, sans-serif; }
-    *, *::before, *::after { box-sizing: inherit; }
-
-    body {
-      background: url('{{ asset("images/bg.jpg") }}') no-repeat center center fixed;
-      background-size: cover;
-      color: var(--white);
-      transition: background .32s, color .32s;
-      overflow-y: auto;
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{ height:100%; }
+    body{
+      font-family:"Poppins",sans-serif;
+      background: linear-gradient(135deg, var(--pink-1), var(--pink-2));
+      color:#222;
+      display:flex;
+      flex-direction:column;
+      min-height:100vh;
     }
+    html.dark body { background: linear-gradient(135deg, #1b0f12, #2a1420); color:#eee; }
 
-    html.dark body,
-    body.dark {
-      background: linear-gradient(to bottom right, #1a1a1a, #2a2a2a),
-                  url('{{ asset("images/resumebg.jpg") }}') no-repeat center center fixed;
-      background-blend-mode: multiply;
-      color: var(--white);
-    }
-
-    .form-container {
-      background: var(--pink-bg);
-      backdrop-filter: blur(6px);
-      padding: 26px;
-      border-radius: 12px;
-      box-shadow: 0 0 18px rgba(0,0,0,0.45);
-      width: 86%;
-      max-width: 500px;
-      margin: 130px auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      color: var(--white);
-    }
-
-    .form-container h2 { margin:0; font-size:1.6rem; text-align:center; padding-bottom:4px; display:flex; gap:10px; align-items:center; justify-content:center; }
-    form { display:flex; flex-direction:column; gap:8px; width:100%; }
-
-    input {
+    header{
       width:100%;
-      padding:10px 44px 10px 12px;
-      border-radius:6px;
-      border:1px solid rgba(0,0,0,0.06);
-      background: var(--input-bg);
-      color:#111;
-      font-size:0.95rem;
-      box-sizing:border-box;
-      transition: box-shadow var(--transition), transform var(--transition), border-color var(--transition);
+      max-width:1200px;
+      margin-top:28px;
+      padding:18px 22px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+    }
+    header .left { display:flex; flex-direction:column; gap:6px; }
+    header p{ color:var(--accent-pink); font-size:2.5rem; margin:0; font-weight:700; }
+
+    .auth {
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .auth a {
+      padding:10px 14px;
+      border-radius:999px;
+      font-weight:600;
+      text-decoration:none;
+      cursor:pointer;
+      transition: transform var(--transition), box-shadow 0.2s, opacity 0.2s;
+      color:#fff;
+    }
+    .auth a.welcome { background: linear-gradient(90deg,#ff5a9b,#ff3d7a); }
+    .auth a.signup { background: linear-gradient(90deg,#ff97b6,#ff6ea0); }
+    .auth a:hover {
+      transform:translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+      opacity:0.9;
     }
 
-    input:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
-    input:focus-visible {
-      outline: none;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.10), 0 0 0 3px rgba(255,255,255,0.04);
-      border-color: rgba(0,0,0,0.12);
-    }
-
-    .input-row { position: relative; width:100%; }
-
-    .toggle-pass {
-      position:absolute;
-      right:8px;
-      top:50%;
-      transform: translateY(-50%);
-      background: transparent;
-      border: none;
-      padding:6px;
+    .theme-toggle {
       display:inline-flex;
       align-items:center;
-      justify-content:center;
-      border-radius:6px;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,0.9);
+      color: #6b2a4a;
+      font-weight:600;
       cursor:pointer;
-      color: rgba(17,17,17,0.85);
-      transition: background var(--transition), transform var(--transition);
-      font-size:1rem;
-      z-index: 3;
+      border:none;
+      box-shadow:0 6px 18px rgba(0,0,0,0.06);
+      transition: transform 0.2s, box-shadow 0.2s;
     }
-    .toggle-pass:hover { background: rgba(0,0,0,0.04); transform: translateY(-50%) scale(1.03); }
-    .toggle-pass:focus-visible { outline:none; box-shadow: 0 6px 18px rgba(0,0,0,0.12); }
+    .theme-toggle:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    }
+    html.dark .theme-toggle {
+      background: rgba(255,255,255,0.06);
+      color: #f6e6ef;
+      box-shadow: none;
+      border:1px solid rgba(255,255,255,0.04);
+    }
+
+    main.hero{
+      margin-top:-25px;
+      width:100%;
+      padding:34px 20px 50px;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+    }
+
+    .card {
+      width:96%;
+      max-width:1200px;
+      background:var(--container-pink);
+      color:#fff;
+      border-radius:var(--radius);
+      padding:0 28px 28px;
+      box-shadow:0 10px 40px rgba(0,0,0,0.15);
+      display:flex;
+      gap:28px;
+      align-items:flex-start;
+      overflow:visible;
+      position:relative;
+    }
+    html.dark .card { background: rgba(54, 18, 36, 0.92); }
+
+    .card-topline {
+      position:absolute;
+      top:0; left:0; right:0;
+      height:8px;
+      border-top-left-radius:var(--radius);
+      border-top-right-radius:var(--radius);
+      background: var(--line-grad);
+      z-index:6;
+    }
+    html.dark .card-topline {
+      background: linear-gradient(90deg, rgba(200,80,140,0.9), rgba(130,60,120,0.85));
+    }
+
+    .left-col {
+      margin: 10px;
+      flex:1 1 640px;
+      min-width:300px;
+      max-width:760px;
+      color: #fff;
+      padding-top:20px;
+    }
+    .left-col h1 { font-size:2rem; margin-bottom:6px; color:#fff; line-height:1.02; }
+    .left-col p { margin-bottom:14px; color: rgba(255,255,255,0.96); font-size:1.05rem; }
+
+    .inner {
+      background: #e03e7fff;
+      color:#fff;
+      border-radius:12px;
+      padding:28px 20px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+      margin-bottom:18px;
+      max-width:100%;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+    }
+    html.dark .inner { background: rgba(116, 54, 76, 0.95); color:#fff; box-shadow:none; border:1px solid rgba(192, 192, 192, 0.03); }
+
+    form { display:flex; flex-direction:column; width:100%; gap:16px; }
+
+    input {
+      width:100%; padding:12px 44px 12px 12px;
+      border-radius:8px; border:none; font-size:0.95rem;
+      background:#fff; color:#333;
+      transition: border 0.2s, outline 0.2s;
+    }
+    input:focus { outline: 2px solid rgba(255,255,255,0.7); }
+    html.dark input { background: rgba(240, 240, 240, 0.95); color:#333; }
+
+    .toggle-pass {
+      position:absolute; right:8px; top:50%; transform:translateY(-50%);
+      background:transparent; border:none; cursor:pointer; font-size:1rem; color:#333;
+    }
+    html.dark .toggle-pass { color:#333; }
 
     .login-btn {
-      padding:10px 12px;
-      border-radius:6px;
-      border:none;
-      background: rgba(0,0,0,0.75);
-      color: var(--white);
-      font-weight:600;
-      cursor:pointer;
-      transition: transform var(--transition), background var(--transition);
-    }
-    .login-btn:hover { transform: translateY(-2px); background: rgba(0,0,0,0.86); }
-
-    .link {
-      text-decoration:none;
-      display:block;
-      text-align:center;
-      font-size:0.92rem;
-      padding:6px 4px;
-      position:relative;
-      transition: color .18s, transform .18s;
-      line-height:1.1;
-      color: var(--white);
-    }
-    .link::after {
-      content: "";
-      position:absolute;
-      left:50%;
-      transform: translateX(-50%);
-      bottom:3px;
-      width:0;
-      height:2px;
-      background: currentColor;
-      border-radius:2px;
-      transition: width .18s ease;
-    }
-    .link:hover::after, .link:focus-visible::after { width:55%; }
-
-    /* Specific link colors */
-    .forgot-pass { color: var(--white); }
-    .forgot-pass:hover { color: #ffe6ec; transform: translateY(-2px); }
-
-    .signup-link { color: var(--white); }
-    .signup-link:hover { color: #ffe6ec; transform: translateY(-2px); }
-
-    .back-welcome { color: var(--black); font-weight:500; }
-    .back-welcome:hover { color: var(--black); transform: none; }
-
-    .server-error {
-      display:none;
-      padding:8px 10px;
+      padding:12px;
       border-radius:8px;
-      background: rgba(210,20,20,0.08);
-      color: var(--error);
-      font-weight:600;
-      font-size:0.92rem;
+      border:none;
+      background: linear-gradient(90deg,#ff97b6,#ff6ea0);
+      color:#fff; font-weight:600; cursor:pointer;
+      transition: transform var(--transition), box-shadow 0.2s, opacity 0.2s;
+      width:100%;
       text-align:center;
     }
+    .login-btn:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      opacity:0.95;
+    }
+
+    .links {
+      display:flex; justify-content:center; font-size:0.92rem; margin-top:10px;
+    }
+    .links a { color:#fff; text-decoration:underline; font-weight:600; transition: opacity 0.2s; }
+    .links a:hover { opacity:0.8; }
+
+    .server-error { display:none; padding:8px 10px; border-radius:8px; background: rgba(210,20,20,0.15); color: #fff; font-weight:600; text-align:center; margin-bottom:10px; transition: opacity 0.2s; }
     .server-error.active { display:block; }
 
-    @media (max-width:880px) {
-      .form-container { width: calc(100% - 32px); margin: 28px 16px; padding: 18px; }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      * { transition: none !important; animation: none !important; transform: none !important; }
-    }
+    .right-col { width:320px; display:flex; flex-direction:column; gap:12px; align-items:center; padding-top:18px; }
+    .placeholder-card { width:100%; max-width:320px; border-radius:12px; padding:14px; background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); box-shadow:0 10px 30px rgba(0,0,0,0.12); display:flex; flex-direction:column; gap:12px; align-items:center; color:#fff; }
+    html.dark .placeholder-card { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); box-shadow:none; border:1px solid rgba(255,255,255,0.03); }
+    .placeholder-photo { width:100%; height:270px; border-radius:10px; object-fit:cover; }
+    .placeholder-title { font-weight:700; color:#fff; text-align:center; font-size:0.95rem; }
   </style>
 </head>
 <body>
-  {{-- Top bar include --}}
-  @include('public_topbar')
 
-  <div class="form-container" role="main" aria-labelledby="loginHeading">
-    <h2 id="loginHeading"><i class="fas fa-sign-in-alt" aria-hidden="true"></i> Login</h2>
-
-    <div id="serverError" class="server-error" role="status" aria-live="polite" tabindex="-1">
-      @if ($errors->any())
-        {{ $errors->first() }}
-      @endif
+  <header>
+    <div class="left">
+      <p>Let's Login Here!</p>
     </div>
 
-    <form id="loginForm" method="POST" action="{{ route('login.post') }}" novalidate>
-      @csrf
+    <div class="auth">
+      <button id="themeToggle" class="theme-toggle" aria-pressed="false" title="Toggle dark mode">
+        <span id="themeIcon">🌙</span>
+        <span id="themeLabel">Dark</span>
+      </button>
+      <a href="{{ route('welcome') }}" class="welcome">Welcome</a>
+      <a href="{{ route('register') }}" class="signup">Sign Up</a>
+    </div>
+  </header>
 
-      <input id="login" name="login" type="text" placeholder="Username or Email" autocomplete="username" required aria-required="true" aria-label="Username or Email">
+  <main class="hero">
+    <div class="card">
+      <div class="card-topline"></div>
 
-      <div class="input-row">
-        <input id="password" name="password" type="password" placeholder="Password" autocomplete="current-password" required aria-required="true" aria-label="Password">
-        <button type="button" class="toggle-pass" id="togglePassword" aria-label="Show password" aria-pressed="false" tabindex="0">
-          <i class="fa-solid fa-eye" aria-hidden="true"></i>
-        </button>
+      <div class="left-col">
+        <h1>You’re One Step Ahead!</h1>
+        <p>Log in to access your dashboard.</p>
+
+        <div class="inner">
+          <div id="serverError" class="server-error @if($errors->any()) active @endif">
+            @if ($errors->any())
+              {{ $errors->first() }}
+            @endif
+          </div>
+
+          <form id="loginForm" method="POST" action="{{ route('login.post') }}">
+            @csrf
+            <input id="login" name="login" type="text" placeholder="Username or Email" required autocomplete="username">
+            
+            <div class="input-row" style="position:relative;">
+              <input id="password" name="password" type="password" placeholder="Password" required autocomplete="current-password">
+              <button type="button" class="toggle-pass" id="togglePassword"><i class="fa-solid fa-eye"></i></button>
+            </div>
+
+            <button type="submit" class="login-btn">Login</button>
+
+            <div class="links" style="margin-top:10px;">
+              <a href="{{ url('/forgot-password') }}">Forgot your password?</a>
+            </div>
+          </form>
+        </div>
       </div>
 
-      <button type="submit" class="login-btn" aria-label="Login">Login</button>
-    </form>
-
-    <a href="{{ url('/forgot-password') }}" class="link forgot-pass" aria-label="Forgot your password?">
-      <i class="fas fa-key" aria-hidden="true"></i> Forgot your password?
-    </a>
-    <a href="{{ route('register') }}" class="link signup-link" aria-label="Don't have an account? Sign up">
-      <i class="fas fa-user-plus" aria-hidden="true"></i> Don't have an account? Sign Up
-    </a>
-    <a href="{{ route('welcome') }}" class="link back-welcome" aria-label="Back to Welcome">
-      <i class="fas fa-home" aria-hidden="true"></i> Back to Welcome
-    </a>
-  </div>
+      <div class="right-col">
+        <div class="placeholder-card">
+          <img src='{{ asset("images/community-photo.jpg") }}' alt="Community spotlight" class="placeholder-photo" onerror="this.onerror=null;this.src='{{ asset('default-spotlight.jpg') }}'">
+          <div class="placeholder-title">Community Spotlight</div>
+          <div style="font-size:0.9rem; color:rgba(255,255,255,0.95); text-align:center;">
+            A curated view of member highlights — log in to learn more.
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
 
   <script>
-  (function(){
+    // Theme toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeLabel = document.getElementById('themeLabel');
+    function updateThemeUI() {
+      const isDark = document.documentElement.classList.contains('dark');
+      themeToggle.setAttribute('aria-pressed', String(isDark));
+      themeIcon.textContent = isDark ? '☀️' : '🌙';
+      themeLabel.textContent = isDark ? 'Light' : 'Dark';
+    }
+    themeToggle.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      updateThemeUI();
+    });
+    updateThemeUI();
+
     // Password toggle
-    (function passwordToggle(){
-      var toggle = document.getElementById('togglePassword');
-      var pass = document.getElementById('password');
-      if(!toggle || !pass) return;
+    const toggle = document.getElementById('togglePassword');
+    const pass = document.getElementById('password');
+    toggle?.addEventListener('click', () => {
+      const type = pass.type === 'password' ? 'text' : 'password';
+      pass.type = type;
+      toggle.querySelector('i').classList.toggle('fa-eye');
+      toggle.querySelector('i').classList.toggle('fa-eye-slash');
+    });
 
-      toggle.addEventListener('click', function(){
-        var show = pass.type === 'password';
-        pass.type = show ? 'text' : 'password';
-        this.setAttribute('aria-pressed', String(show));
-        this.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
-        var icon = this.querySelector('i');
-        if(icon){
-          icon.classList.toggle('fa-eye');
-          icon.classList.toggle('fa-eye-slash');
-          icon.classList.add('fa-solid');
+    // Custom required message
+    const loginInput = document.getElementById('login');
+    const passwordInput = document.getElementById('password');
+
+    loginInput.addEventListener('invalid', function() {
+      this.setCustomValidity('All fields are required!');
+    });
+    loginInput.addEventListener('input', function() {
+      this.setCustomValidity('');
+    });
+
+    passwordInput.addEventListener('invalid', function() {
+      this.setCustomValidity('All fields are required!');
+    });
+    passwordInput.addEventListener('input', function() {
+      this.setCustomValidity('');
+    });
+
+    // Hide server error on typing
+    const serverError = document.getElementById('serverError');
+    [loginInput, passwordInput].forEach(input => {
+      input.addEventListener('input', () => {
+        if (serverError.classList.contains('active')) {
+          serverError.classList.remove('active');
+          serverError.textContent = '';
         }
       });
-
-      toggle.addEventListener('keydown', function(e){
-        if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.click(); }
-      });
-    })();
-
-    // Form validation
-    (function formValidation(){
-      var form = document.getElementById('loginForm');
-      var loginInput = document.getElementById('login');
-      var passwordInput = document.getElementById('password');
-      var serverErrorBox = document.getElementById('serverError');
-
-      [loginInput, passwordInput].forEach(function(f){
-        if(!f) return;
-        f.addEventListener('input', function(){
-          if(serverErrorBox && serverErrorBox.classList.contains('active')){
-            serverErrorBox.classList.remove('active');
-            serverErrorBox.textContent = '';
-          }
-          f.setCustomValidity('');
-        });
-      });
-
-      function setCustomEmptyMessage(){
-        if(!loginInput.value.trim()) loginInput.setCustomValidity('All fields are required!');
-        else if(!passwordInput.value.trim()) passwordInput.setCustomValidity('All fields are required!');
-      }
-
-      if(form){
-        form.addEventListener('submit', function(e){
-          setCustomEmptyMessage();
-          if(!form.checkValidity()){
-            e.preventDefault();
-            form.reportValidity();
-            if(!loginInput.value.trim()) loginInput.focus();
-            else if(!passwordInput.value.trim()) passwordInput.focus();
-            return false;
-          }
-          return true;
-        });
-      }
-
-      // server errors from Laravel
-      try{
-        var serverMsg = @json($errors->first() ?? null);
-        if(serverMsg && serverErrorBox){
-          serverErrorBox.textContent = serverMsg;
-          serverErrorBox.classList.add('active');
-        }
-      } catch(e){}
-    })();
-
-    // Themed links
-    (function setupThemedLinks(){
-      var themed = document.querySelectorAll('.themed-link');
-      if(!themed || themed.length === 0) return;
-
-      function currentTheme(){
-        try { return localStorage.getItem('theme'); } catch(e){}
-        return document.documentElement.classList.contains('dark') || document.body.classList.contains('dark') ? 'dark' : 'light';
-      }
-
-      function writeThemeCookie(value){
-        try { document.cookie = 'theme=' + encodeURIComponent(value) + ';path=/;max-age=' + 60*60*24*365 + ';SameSite=Lax'; } catch(e){}
-      }
-
-      themed.forEach(function(a){
-        a.addEventListener('click', function(e){
-          if(e.metaKey || e.ctrlKey || e.button === 1) return;
-          e.preventDefault();
-          var theme = currentTheme() || 'light';
-          writeThemeCookie(theme);
-          try {
-            var href = a.getAttribute('href') || window.location.href;
-            var sep = href.indexOf('?') === -1 ? '?' : '&';
-            window.location.href = href + sep + 'theme=' + encodeURIComponent(theme);
-          } catch(err){ window.location.href = a.getAttribute('href') || '/'; }
-        });
-      });
-    })();
-  })();
+    });
   </script>
 </body>
 </html>

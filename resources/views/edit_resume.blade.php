@@ -229,7 +229,7 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
     {{-- Profile --}}
     <div class="section visible" data-section="profile">
         <h2>Profile Picture</h2>
-        <img id="profile-preview" src="{{ old('cropped_image') ?: (!empty($resume->profile_photo) ? asset('storage/'.$resume->profile_photo) : 'https://via.placeholder.com/150') }}" alt="Profile Preview">
+        <img id="profile-preview" src="{{ old('cropped_image') ?: (!empty($resume->profile_photo) ? asset('storage/'.$resume->profile_photo) : asset('images/default-avatar.png')) }}" alt="Profile Preview">
         <input type="file" id="profile-input" accept="image/*" aria-label="Upload profile photo">
         <input type="hidden" name="cropped_image" id="cropped_image" value="{{ old('cropped_image', '') }}">
     </div>

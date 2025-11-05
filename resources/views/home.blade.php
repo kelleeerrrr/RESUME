@@ -19,7 +19,6 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
 
   <style>
-    /* (kept your original styles) */
     :root{
       --pink-1:#ffe6eb; --pink-2:#ffd6f6; --accent-pink:#d63384; --container-pink:rgba(206,133,150,0.95);
       --radius:14px; --card-width:1200px;
@@ -96,7 +95,7 @@
 
     /* Modal */
     .modal-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); align-items:center; justify-content:center; z-index:1000; padding:20px; }
-    .modal { background:#fff; border-radius:12px; max-width:600px; width:100%; padding:16px; display:flex; flex-direction:column; gap:10px; }
+    .modal { background:rgba(220, 153, 164, 1); color: #000; border-radius:12px; max-width:600px; width:100%; padding:16px; display:flex; flex-direction:column; gap:10px; }
     .crop-container { width:100%; height:400px; position:relative; background:#333; display:flex; align-items:center; justify-content:center; overflow:hidden; border-radius:50%; }
     .crop-container img { border-radius:50%; max-width:100%; }
     .modal-footer { display:flex; justify-content:flex-end; gap:10px; }
@@ -144,7 +143,6 @@
 
         {{-- Public Resume Link --}}
         @php
-          // Only generate a public resume link if the user has a resume saved.
           $resume = ($userId) ? Resume::where('user_id', $userId)->with('awardFiles')->first() : null;
           $resumeLink = $resume ? url('/public-resume/'.$userId) : '';
         @endphp
@@ -159,11 +157,7 @@
             @if($resume)
               <a href="{{ route('resume.edit', $resume->id) }}" class="btn">Edit Resume</a>
               <a href="{{ url('/public-resume/'.$userId) }}" class="btn secondary">View Public Resume</a>
-              <form method="POST" action="{{ route('resume.destroy', $resume->id) }}" style="display:inline;">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn secondary">Delete Resume</button>
-              </form>
+              <button id="deleteResumeBtn" class="btn secondary">Delete Resume</button>
             @else
               <a href="{{ route('resume.create') }}" class="btn">Create Resume</a>
             @endif
@@ -176,14 +170,12 @@
             @if($resume && $resume->profile_photo)
               <img src="{{ asset('storage/'.$resume->profile_photo) }}" alt="{{ $userName ?? 'User' }}" class="photo">
             @else
-              <span class="spotlight-plus">+</span>
+              <img src="{{ asset('images/default-avatar.png') }}" alt="Default Profile" class="photo">
             @endif
           </div>
           <div class="meta">
             <h3>{{ $userName ?? 'Your name' }}</h3>
             <p class="specialization">{{ $resume->specialization ?? '—' }}</p>
-
-            {{-- Last-updated should only show when user saved the resume (i.e., resume exists) --}}
             @if($resume && $resume->updated_at)
               <p class="last-updated">Last updated: {{ Carbon::parse($resume->updated_at)->diffForHumans() }}</p>
             @endif
@@ -194,7 +186,6 @@
       {{-- Spotlight photo right --}}
       <div class="right-col">
         @php
-          // If controller saved a temporary spotlight and set session('pending_spotlight'), show it.
           $pending = session('pending_spotlight') ?? null;
           $spotSrc = null;
           if ($pending && Storage::disk('public')->exists($pending)) {
@@ -203,7 +194,6 @@
               $spotSrc = asset('storage/'.$resume->spotlight_photo);
           }
         @endphp
-
         <div class="spotlight-photo-wrap" id="spotlightWrap" tabindex="0" aria-label="Spotlight photo upload">
           @if($spotSrc)
             <img src="{{ $spotSrc }}" alt="Spotlight photo" class="spotlight-photo" id="currentSpotlight">
@@ -216,6 +206,21 @@
       </div>
     </div>
   </main>
+
+  {{-- Delete confirmation modal --}}
+  <div class="modal-backdrop" id="deleteModal" style="display:none;">
+    <div class="modal">
+      <p>Are you sure you want to delete your resume?</p>
+      <div class="modal-footer">
+        <form id="deleteForm" method="POST" action="{{ $resume ? route('resume.destroy', $resume->id) : '#' }}">
+          @csrf
+          @method('DELETE')
+          <button type="submit" class="btn">Delete</button>
+        </form>
+        <button class="btn secondary" id="cancelDelete">Cancel</button>
+      </div>
+    </div>
+  </div>
 
   {{-- Hidden file input and modal --}}
   <input type="file" id="photoInput" accept="image/*" style="display:none">
@@ -231,49 +236,47 @@
     </div>
   </div>
 
-  {{-- Hidden form --}}
   <form id="photoUploadForm" method="POST" action="{{ route('resume.photo.update') }}" style="display:none;">
     @csrf
     <input type="hidden" name="photo_type" value="spotlight">
     <input type="hidden" name="photo_data" id="photoDataInput" value="">
   </form>
 
-  {{-- Scripts --}}
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <script>
-    // Theme toggle (unchanged)
+    // Dark mode localStorage
     (function(){
       const themeToggle = document.getElementById('themeToggle');
       const themeIcon = document.getElementById('themeIcon');
       const themeLabel = document.getElementById('themeLabel');
-      function updateThemeUI(){ const isDark = document.documentElement.classList.contains('dark'); if(themeToggle){ themeToggle.setAttribute('aria-pressed', String(isDark)); themeIcon.textContent = isDark ? '☀️' : '🌙'; themeLabel.textContent = isDark ? 'Light' : 'Dark'; } }
-      if(themeToggle){ themeToggle.addEventListener('click', ()=>{ const isDark = document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', isDark ? 'dark' : 'light'); updateThemeUI(); }); updateThemeUI(); }
+      if(localStorage.getItem('theme')==='dark') document.documentElement.classList.add('dark');
+      function updateThemeUI(){ const isDark = document.documentElement.classList.contains('dark'); themeToggle.setAttribute('aria-pressed', isDark); themeIcon.textContent=isDark?'☀️':'🌙'; themeLabel.textContent=isDark?'Light':'Dark'; }
+      themeToggle.addEventListener('click', ()=>{ document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark')?'dark':'light'); updateThemeUI(); });
+      updateThemeUI();
     })();
 
-    // Copy Resume Link
+    // Copy resume link
     const copyBtn = document.getElementById('copyResumeBtn');
     const resumeLinkInput = document.getElementById('publicResumeLink');
-    if (copyBtn) {
-      copyBtn.addEventListener('click', ()=>{
-        if(!resumeLinkInput.value) return;
-        resumeLinkInput.select();
-        resumeLinkInput.setSelectionRange(0, 99999);
-        navigator.clipboard.writeText(resumeLinkInput.value).then(()=>{
-          const original = copyBtn.textContent;
-          copyBtn.textContent = 'Copied';
-          setTimeout(()=> copyBtn.textContent = original, 3000);
-        });
-      });
+    if(copyBtn) copyBtn.addEventListener('click', ()=>{ if(!resumeLinkInput.value) return; resumeLinkInput.select(); resumeLinkInput.setSelectionRange(0,99999); navigator.clipboard.writeText(resumeLinkInput.value).then(()=>{ const orig=copyBtn.textContent; copyBtn.textContent='Copied'; setTimeout(()=>copyBtn.textContent=orig,3000); }); });
+
+    // Delete confirmation
+    const deleteBtn = document.getElementById('deleteResumeBtn');
+    const deleteModal = document.getElementById('deleteModal');
+    const cancelDelete = document.getElementById('cancelDelete');
+    if(deleteBtn){
+      deleteBtn.addEventListener('click', ()=> deleteModal.style.display='flex');
+    }
+    if(cancelDelete){
+      cancelDelete.addEventListener('click', ()=> deleteModal.style.display='none');
     }
 
-    // Highlight profile photo on click
+    // Profile highlight
     const resumePreview = document.getElementById('resumePreview');
     const previewPhotoWrap = document.getElementById('previewPhotoWrap');
-    if (resumePreview && previewPhotoWrap) {
-      resumePreview.addEventListener('click', ()=> previewPhotoWrap.classList.toggle('active'));
-    }
+    if(resumePreview && previewPhotoWrap) resumePreview.addEventListener('click', ()=> previewPhotoWrap.classList.toggle('active'));
 
-    // Spotlight crop logic - allows immediate preview even if there was no currentSpotlight <img>
+    // Spotlight crop logic
     const spotlightWrap = document.getElementById('spotlightWrap');
     const photoInput = document.getElementById('photoInput');
     const cropModal = document.getElementById('cropModalBackdrop');
@@ -286,7 +289,6 @@
     let cropper = null;
 
     if (spotlightWrap) spotlightWrap.addEventListener('click', ()=> photoInput.click());
-
     photoInput.addEventListener('change', e=>{
       const file = e.target.files[0];
       if(!file) return;
@@ -295,46 +297,29 @@
       if(cropper) cropper.destroy();
       cropper = new Cropper(cropImage, { aspectRatio:1, viewMode:1, movable:true, zoomable:true, rotatable:false, scalable:false, autoCropArea:1, background:false });
     });
-
     applyCrop.addEventListener('click', ()=>{
       if(!cropper) return;
       const canvas = cropper.getCroppedCanvas({ width:280, height:280, imageSmoothingQuality:'high' });
       const croppedDataUrl = canvas.toDataURL('image/png');
-
-      // If an <img id="currentSpotlight"> exists, update it; otherwise create it (so first-time upload reflects immediately)
-      if (currentSpotlight) {
-        currentSpotlight.style.opacity = 0;
-        setTimeout(()=> { currentSpotlight.src = croppedDataUrl; currentSpotlight.style.opacity = 1; }, 180);
-      } else {
-        // create img + overlay so the UI mirrors the saved state immediately
+      if(currentSpotlight){
+        currentSpotlight.style.opacity=0;
+        setTimeout(()=>{ currentSpotlight.src=croppedDataUrl; currentSpotlight.style.opacity=1; },180);
+      }else{
         const wrap = document.getElementById('spotlightWrap');
-        if (wrap) {
-          wrap.innerHTML = '<img id="currentSpotlight" class="spotlight-photo" src="' + croppedDataUrl + '" alt="Spotlight photo"><div class="spotlight-overlay">Change Photo</div>';
-          currentSpotlight = document.getElementById('currentSpotlight');
-        }
+        wrap.innerHTML='<img id="currentSpotlight" class="spotlight-photo" src="'+croppedDataUrl+'" alt="Spotlight photo"><div class="spotlight-overlay">Change Photo</div>';
+        currentSpotlight=document.getElementById('currentSpotlight');
       }
-
-      // submit base64 to server (your controller should handle saving a temp file and set session('pending_spotlight'))
-      photoDataInput.value = croppedDataUrl;
+      photoDataInput.value=croppedDataUrl;
       cropModal.style.display='none';
       cropper.destroy(); cropper=null; photoInput.value=null;
-
-      // submit form to controller route: resume.photo.update
       photoUploadForm.submit();
     });
-
     cancelCrop.addEventListener('click', ()=>{
-      cropModal.style.display='none';
-      if(cropper) cropper.destroy();
-      cropper=null; photoInput.value=null;
+      cropModal.style.display='none'; if(cropper) cropper.destroy(); cropper=null; photoInput.value=null;
     });
-
     document.addEventListener('keydown', e=>{
-      if(e.key==='Escape' && cropModal.style.display==='flex'){
-        cropModal.style.display='none';
-        if(cropper) cropper.destroy();
-        cropper=null; photoInput.value=null;
-      }
+      if(e.key==='Escape' && cropModal.style.display==='flex'){ cropModal.style.display='none'; if(cropper) cropper.destroy(); cropper=null; photoInput.value=null; }
+      if(e.key==='Escape' && deleteModal.style.display==='flex'){ deleteModal.style.display='none'; }
     });
   </script>
 </body>

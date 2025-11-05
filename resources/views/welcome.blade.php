@@ -9,7 +9,6 @@
   <script>
     (function () {
       try {
-        // Prefer localStorage; fallback to prefers-color-scheme
         var lsTheme = localStorage.getItem('theme');
         var prefers = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
         var theme = lsTheme || prefers;
@@ -46,7 +45,6 @@
       -moz-osx-font-smoothing:grayscale;
     }
 
-    /* dark mode base overrides */
     html.dark body {
       background: linear-gradient(135deg, #1b0f12, #2a1420);
       color:#eee;
@@ -81,7 +79,6 @@
     .auth a.login { background: linear-gradient(90deg,#ff5a9b,#ff3d7a); }
     .auth a.signup { background: linear-gradient(90deg,#ff97b6,#ff6ea0); }
 
-    /* Dark-mode toggle button */
     .theme-toggle {
       display:inline-flex;
       align-items:center;
@@ -117,7 +114,7 @@
       background:var(--container-pink);
       color:#fff;
       border-radius:var(--radius);
-      padding:0 28px 28px; /* top handled by top-line wrapper */
+      padding:0 28px 28px;
       box-shadow:0 10px 40px rgba(0,0,0,0.15);
       display:flex;
       gap:28px;
@@ -127,7 +124,6 @@
     }
     html.dark .card { background: rgba(24, 7, 16, 0.92); }
 
-    /* Decorative top line (thin) */
     .card-topline {
       position:absolute;
       top:0;
@@ -143,14 +139,13 @@
       background: linear-gradient(90deg, rgba(200,80,140,0.9), rgba(130,60,120,0.85));
     }
 
-    /* left column (intro + controls) */
     .left-col {
       margin: 10px;
       flex:1 1 640px;
       min-width:300px;
       max-width:760px;
       color: #fff;
-      padding-top:20px; /* leave space below the top line */
+      padding-top:20px;
     }
     .left-col h1 { font-size:2rem; margin-bottom:6px; color:#fff; line-height:1.02; }
     .left-col p { margin-bottom:14px; color: rgba(255,255,255,0.96); font-size:1.05rem; }
@@ -257,7 +252,6 @@
     .user-card h3 { color:var(--accent-pink); font-size:1.05rem; margin:6px 0 2px; font-weight:700; }
     .user-card .course { color:#666; font-size:0.92rem; margin:0; min-height:28px; }
 
-    /* small overlay CTA on card */
     .user-card::after {
       content: "View Resume";
       position:absolute;
@@ -270,7 +264,6 @@
     }
     .user-card:hover::after { bottom:8px; }
 
-    /* SEE ALL card style (acts as pseudo-card) */
     .see-all-card {
       display:flex;
       flex-direction:column;
@@ -299,14 +292,13 @@
       text-decoration:none;
     }
 
-    /* right column (photo placeholder) */
     .right-col {
       width:320px;
       display:flex;
       flex-direction:column;
       gap:12px;
       align-items:center;
-      padding-top:18px; /* to align with left-col content below the top-line */
+      padding-top:18px;
     }
 
     .placeholder-card {
@@ -362,7 +354,6 @@
     </div>
 
     <div class="auth">
-      <!-- Theme toggle (uses localStorage 'theme') -->
       <button id="themeToggle" class="theme-toggle" aria-pressed="false" title="Toggle dark mode">
         <span id="themeIcon">🌙</span>
         <span id="themeLabel">Dark</span>
@@ -375,7 +366,6 @@
 
   <main class="hero" role="main" aria-labelledby="main-title">
     <div class="card" role="region" aria-label="Community resume browser">
-      <!-- decorative line on top -->
       <div class="card-topline" aria-hidden="true"></div>
 
       <div class="left-col">
@@ -396,19 +386,12 @@
           </div>
 
           <div class="users-grid" id="usersGrid" style="margin-top:14px;">
-            @php
-              // We'll still output all cards server-side (so pagination and accessibility remain intact).
-              // client-side JS will limit initial visible cards to MAX_VISIBLE and create a See All card if needed.
-            @endphp
-
             @forelse($users as $user)
               @php
                 $r = $user->resume ?? null;
-                $photo = $r && !empty($r->profile_photo) ? asset('storage/'.$r->profile_photo) : asset('default-avatar.png');
-                // Course or specialization for preview (fallbacks)
+                $photo = $r && !empty($r->profile_photo) ? asset('storage/'.$r->profile_photo) : asset('images/default-avatar.png');
                 $course = $r->course ?? $r->specialization ?? ($r && is_string($r->interests) ? $r->interests : '');
-                // use user's creation date for sorting
-                $created = $user->created_at ?? $user->created_at ?? now();
+                $created = $user->created_at ?? now();
               @endphp
 
               <a href="{{ route('resume.public.show', $user->id) }}"
@@ -430,9 +413,6 @@
       </div>
 
       <div class="right-col" aria-hidden="true">
-        <!-- Replace SVG with a photo inside the container.
-             Put your image in public/storage or public assets and update the path below.
-             Fallback to default-spotlight.jpg if needed. -->
         <div class="placeholder-card" role="img" aria-label="Decorative photo">
           <img src='{{ asset("images/community-photo.jpg") }}' alt="Community spotlight" class="placeholder-photo" onerror="this.onerror=null;this.src='{{ asset('default-spotlight.jpg') }}'">
           <div class="placeholder-title">Community Spotlight</div>
@@ -446,13 +426,12 @@
 
   <script>
     (function(){
-      const MAX_VISIBLE = 5; // show up to 5 cards, 6th becomes "See all"
+      const MAX_VISIBLE = 5;
       const searchInput = document.getElementById('searchInput');
       const sortSelect = document.getElementById('sortSelect');
       const usersGrid = document.getElementById('usersGrid');
       const resultsCountEl = document.getElementById('resultsCount');
 
-      // Theme toggle wiring
       const themeToggle = document.getElementById('themeToggle');
       const themeIcon = document.getElementById('themeIcon');
       const themeLabel = document.getElementById('themeLabel');
@@ -465,131 +444,90 @@
       }
 
       themeToggle.addEventListener('click', () => {
-        const isDark = document.documentElement.classList.toggle('dark');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
         updateThemeUI();
       });
 
-      // ensure UI matches initial theme
       updateThemeUI();
 
-      // helper to read NodeList as array of current .user-card elements
-      function getCardsArray(){
+      function getCardsArray() {
         return Array.from(usersGrid.querySelectorAll('.user-card'));
       }
 
-      // remove any existing See All card
-      function removeSeeAllCard(){
-        const existing = usersGrid.querySelector('.see-all-card');
-        if(existing) existing.remove();
-      }
-
-      // create a See All pseudo-card that, when clicked, reveals all hidden cards
       function createSeeAllCard(hiddenCount){
         removeSeeAllCard();
         const el = document.createElement('div');
         el.className = 'see-all-card';
         el.setAttribute('role','button');
         el.setAttribute('tabindex','0');
-        el.setAttribute('aria-label', 'See all ' + hiddenCount + ' more results');
-        el.innerHTML = `<div><strong>+${hiddenCount} more</strong></div>
-                        <div class="btn">See all</div>`;
-        el.addEventListener('click', revealAllCards);
-        el.addEventListener('keypress', (e) => { if(e.key === 'Enter' || e.key === ' ') revealAllCards(); });
+        el.dataset.state = 'seeall';
+        el.innerHTML = `<div><strong>+${hiddenCount} more</strong></div><div class="btn">See all</div>`;
+        el.addEventListener('click', toggleSeeAll);
+        el.addEventListener('keypress', (e) => { if(e.key==='Enter'||e.key===' ') toggleSeeAll(); });
         usersGrid.appendChild(el);
       }
 
-      function revealAllCards(){
-        const cards = getCardsArray();
-        cards.forEach(c => c.style.display = '');
-        removeSeeAllCard();
-        // update result count again
-        updateResultsCount();
+      function removeSeeAllCard(){
+        const existing = usersGrid.querySelector('.see-all-card');
+        if(existing) existing.remove();
       }
 
-      function updateResultsCount(visible = null){
-        // compute visible cards that are not hidden by filter
-        const all = Array.from(usersGrid.querySelectorAll('.user-card'));
-        const visibleCount = visible === null ? all.filter(c => c.style.display !== 'none').length : visible;
-        if(resultsCountEl) resultsCountEl.textContent = visibleCount + ' result(s)';
-      }
-
-      function applyFiltersAndLimit(){
-        const q = (searchInput.value || '').trim().toLowerCase();
+      function toggleSeeAll(){
+        const el = usersGrid.querySelector('.see-all-card');
         const cards = getCardsArray();
 
-        // first apply filter (show/hide)
-        let matchCards = [];
-        cards.forEach(card => {
-          const name = (card.dataset.name || '').toLowerCase();
-          const inter = (card.dataset.interests || '').toLowerCase();
-          let match = true;
-          if(q) match = (name.includes(q) || inter.includes(q));
-          card.style.display = match ? '' : 'none';
-          if(match) matchCards.push(card);
-        });
-
-        // after filtering, sort will call limiting; we'll call separate routine that both sorts and enforces max visible.
-        enforceLimitOn(matchCards);
-
-        updateResultsCount(matchCards.length);
-      }
-
-      function sortCardsAndLimit(){
-        const value = sortSelect.value;
-        const cards = getCardsArray();
-        const sorted = [...cards];
-
-        if(value === 'az'){
-          sorted.sort((a,b)=>a.dataset.name.localeCompare(b.dataset.name));
-        } else if(value === 'za'){
-          sorted.sort((a,b)=>b.dataset.name.localeCompare(a.dataset.name));
-        } else if(value === 'newest'){
-          sorted.sort((a,b)=>new Date(b.dataset.date) - new Date(a.dataset.date));
-        } else if(value === 'oldest'){
-          sorted.sort((a,b)=>new Date(a.dataset.date) - new Date(b.dataset.date));
-        }
-
-        // re-append in new order
-        removeSeeAllCard();
-        usersGrid.innerHTML = '';
-        sorted.forEach(card => usersGrid.appendChild(card));
-        // re-append See All card will be created by enforceLimitOn if needed
-        // After sorting, re-apply filters & limit
-        applyFiltersAndLimit();
-      }
-
-      // Takes an array of cards that matched current filter (in DOM order).
-      // Shows up to MAX_VISIBLE and hides remainder; if remainder exists, adds See All card.
-      function enforceLimitOn(matchCards){
-        removeSeeAllCard();
-        // If there are no matches, nothing to display
-        if(matchCards.length === 0) return;
-
-        // Show first MAX_VISIBLE of matchCards; hide the rest
-        matchCards.forEach((card, idx) => {
-          if(idx < MAX_VISIBLE) card.style.display = '';
-          else card.style.display = 'none';
-        });
-
-        const hiddenCount = matchCards.length - MAX_VISIBLE;
-        if(hiddenCount > 0){
-          createSeeAllCard(hiddenCount);
+        if(el.dataset.state === 'seeall'){
+          cards.forEach(c => c.style.display = '');
+          el.dataset.state = 'showless';
+          el.innerHTML = `<div><strong>Show Less</strong></div><div class="btn">Show Less</div>`;
+        } else {
+          cards.forEach((c, idx) => c.style.display = (idx < MAX_VISIBLE) ? '' : 'none');
+          const hiddenCount = cards.length - MAX_VISIBLE;
+          el.dataset.state = 'seeall';
+          el.innerHTML = `<div><strong>+${hiddenCount} more</strong></div><div class="btn">See all</div>`;
         }
       }
 
-      // Initial sort + filter application
-      // we call sortCardsAndLimit which triggers applyFiltersAndLimit
-      // but user might expect initial behavior to already apply limit:
-      sortCardsAndLimit();
+      function applyFilters(){
+        const q = searchInput.value.toLowerCase().trim();
+        const cards = getCardsArray();
+        let visibleCount = 0;
 
-      // events
-      searchInput.addEventListener('input', () => {
-        // keep sort order stable, just re-apply filters & limit
-        applyFiltersAndLimit();
+        cards.forEach(c => {
+          const name = c.dataset.name || '';
+          const interests = c.dataset.interests || '';
+          const match = name.includes(q) || interests.includes(q);
+          c.style.display = match ? '' : 'none';
+          if(match) visibleCount++;
+        });
+
+        resultsCountEl.textContent = `${visibleCount} result(s)`;
+
+        removeSeeAllCard();
+        if(visibleCount > MAX_VISIBLE){
+          createSeeAllCard(visibleCount - MAX_VISIBLE);
+          cards.forEach((c, idx) => { if(idx >= MAX_VISIBLE) c.style.display = 'none'; });
+        }
+      }
+
+      searchInput.addEventListener('input', applyFilters);
+      sortSelect.addEventListener('change', () => {
+        const val = sortSelect.value;
+        const cards = getCardsArray();
+        cards.sort((a,b)=>{
+          const nameA = a.dataset.name||'', nameB = b.dataset.name||'';
+          const dateA = new Date(a.dataset.date), dateB = new Date(b.dataset.date);
+          if(val==='az') return nameA.localeCompare(nameB);
+          if(val==='za') return nameB.localeCompare(nameA);
+          if(val==='newest') return dateB - dateA;
+          if(val==='oldest') return dateA - dateB;
+          return 0;
+        }).forEach(c=>usersGrid.appendChild(c));
+        applyFilters();
       });
-      sortSelect.addEventListener('change', sortCardsAndLimit);
 
+      applyFilters(); // initial
     })();
   </script>
 </body>

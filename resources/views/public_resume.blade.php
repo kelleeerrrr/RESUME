@@ -231,7 +231,7 @@
 <body>
 
 <header role="banner">
-  <img src="{{ asset('images/logo.png') }}" alt="Logo" />
+  <img src="{{ asset('images/icon.png') }}" alt="Logo" />
   <button id="themeToggle" aria-label="Toggle dark mode" type="button">🌙</button>
 </header>
 

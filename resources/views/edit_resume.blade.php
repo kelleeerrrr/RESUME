@@ -1,4 +1,3 @@
-{{-- resources/views/resume_edit.blade.php (updated full file) --}}
 @php
     use Illuminate\Support\Carbon;
     $isNew = empty($resume) || empty($resume->id);
@@ -14,10 +13,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet"/>
 
 <style>
-/* -------------------------
-   Colors & overall look
-   Match sign-up/login/welcome vibes (soft pink gradients)
-   ------------------------- */
 :root{
     --pink-1: #ffe6eb;
     --pink-2: #ffd6f6;
@@ -29,7 +24,6 @@
     --danger: #e74c3c;
 }
 
-/* page background aligned with welcome/login */
 html,body{height:100%; margin:0; font-family:"Poppins",sans-serif; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
 body{
     background: linear-gradient(135deg, var(--pink-1), var(--pink-2));
@@ -37,7 +31,6 @@ body{
     min-height:100vh;
 }
 
-/* container card uses the same container-pink with subtle white panel */
 .container {
     max-width: 950px;
     margin: 40px auto;
@@ -47,14 +40,12 @@ body{
     padding: 34px;
     transition: background 0.3s, color 0.3s, transform 0.12s;
     border: 1px solid rgba(16,24,40,0.04);
-    background: linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,245,248,0.9));
+    background: linear-gradient(135deg, rgba(222, 150, 172, 0.85), rgba(255,245,248,0.9));
     box-shadow: 0 18px 40px rgba(16,24,40,0.06), inset 0 -6px 24px rgba(255,31,132,0.02);
 }
 
-/* subtle hover lift */
 .container:hover { transform: translateY(-6px); box-shadow: 0 28px 50px rgba(16,24,40,0.08); }
 
-/* decorative soft pink bubbles (kept) */
 .bubble{ position:absolute;border-radius:50%;opacity:0.12;filter:blur(6px);pointer-events:none;mix-blend-mode:screen; }
 .b1{ width:120px;height:120px; left:12%; top:2%; background: radial-gradient(circle at 30% 30%, rgba(255,115,165,0.18), rgba(255,200,220,0.06)); }
 .b2{ width:90px;height:90px; right:6%; top:14%; background: radial-gradient(circle at 30% 30%, rgba(255,200,220,0.14), rgba(255,115,165,0.04)); }
@@ -62,16 +53,14 @@ body{
 .b4{ width:40px;height:40px; right:22%; bottom:6%; background: radial-gradient(circle at 30% 30%, rgba(255,115,165,0.10), rgba(255,200,220,0.02)); }
 .b5{ width:180px;height:180px; left:50%; top:-30px; background: radial-gradient(circle at 30% 30%, rgba(255,115,165,0.06), rgba(255,200,220,0.02)); }
 
-/* header + back button */
-/* UPDATED .back-btn so entire pill is clickable and above the title */
 .back-btn {
   position: absolute;
   left: 18px;
   top: 18px;
-  display: inline-flex;                 /* makes the whole box clickable */
+  display: inline-flex;                 
   align-items: center;
   gap: 8px;
-  padding: 10px 14px;                  /* larger hit area */
+  padding: 10px 14px;                  
   border-radius: 12px;
   background: linear-gradient(90deg,var(--accent-pink),var(--accent-pink-2));
   color: #fff;
@@ -79,7 +68,7 @@ body{
   text-decoration: none;
   font-weight: 600;
   box-shadow: 0 10px 30px rgba(214,49,104,0.12);
-  z-index: 9999;                        /* sit above centered title */
+  z-index: 9999;                        
   cursor: pointer;
   transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
 }
@@ -99,7 +88,6 @@ body{
 h1 { color: var(--accent-pink); margin:0; font-weight:800; letter-spacing:-0.3px; }
 .subtitle { color: rgba(107,42,74,0.9); margin-top:6px; margin-bottom:8px; }
 
-/* success banner (green) — appears under title */
 #successBanner {
     display:none;
     margin: 12px 0 18px 0;
@@ -111,7 +99,6 @@ h1 { color: var(--accent-pink); margin:0; font-weight:800; letter-spacing:-0.3px
     border:1px solid rgba(30,120,60,0.08);
 }
 
-/* inputs and sections */
 label{ font-weight:600; margin-top:10px; display:block; }
 input[type="text"], input[type="email"], input[type="date"], textarea, select {
     width:100%;
@@ -127,20 +114,16 @@ input[type="text"], input[type="email"], input[type="date"], textarea, select {
 input::placeholder, textarea::placeholder { color:#bfc6cc; }
 input:focus, textarea:focus, select:focus { border-color: var(--accent-pink); outline:none; box-shadow: 0 10px 30px rgba(255,115,165,0.08); transform: translateY(-1px); }
 
-/* date input styling: keep consistent with others */
 input[type="date"]::-webkit-inner-spin-button,
 input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
 
-/* sections */
 .section { margin-bottom:22px; padding:18px; border-radius:12px; background-color: rgba(255,255,255,0.96); box-shadow:0 8px 26px rgba(16,24,40,0.04); display:none; opacity:0; transform:translateY(8px); transition:opacity 0.36s, transform 0.36s; border-top:1px solid rgba(16,24,40,0.03); }
 .section.visible { display:block; opacity:1; transform:translateY(0); }
 .section:hover { box-shadow:0 18px 40px rgba(255,115,165,0.06); }
 
-/* array input layout */
 .array-input { display:flex; gap:10px; margin-bottom:8px; flex-wrap:wrap; align-items:center; }
 .array-input input { flex:1; min-width:140px; }
 
-/* buttons */
 .btn { display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:10px; text-decoration:none; font-weight:600; border:none; cursor:pointer; color:white; transition: transform 0.12s, box-shadow 0.12s; }
 .btn:hover { transform: translateY(-3px); }
 .btn-save { background: linear-gradient(90deg,var(--accent-pink),var(--accent-pink-2)); box-shadow: 0 12px 36px rgba(214,49,104,0.14); }
@@ -161,31 +144,25 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
 #file-modal iframe{ width:100%; height:80vh; border:none; }
 #file-modal-close{ position:absolute; top:10px; right:10px; z-index:101; border-radius:8px; padding:8px 12px; }
 
-/* unsaved changes modal */
 #unsavedModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:12000; align-items:center; justify-content:center; padding:18px; }
 #unsavedModal .card { background:#fff; padding:18px; border-radius:10px; max-width:420px; text-align:center; color:#111; }
 #unsavedModal .actions { margin-top:14px; display:flex; gap:10px; justify-content:center; }
 
-/* small toast fallback */
 #max-toast { position:fixed; left:50%; transform:translateX(-50%) translateY(12px); bottom:22px; background:rgba(32,32,32,0.94); color:#fff; padding:10px 14px; border-radius:10px; z-index:11000; opacity:0; pointer-events:none; transition:opacity .18s, transform .18s; }
 #max-toast.show{ opacity:1; transform:translateX(-50%) translateY(0); pointer-events:auto; }
 
-/* responsive tweaks */
 @media (max-width:880px){ .container{ margin:24px 18px; padding:20px } .back-btn{ left:12px; top:14px; padding:8px 12px; border-radius:10px } }
 </style>
 </head>
 <body>
 
 <div class="container" role="main" aria-labelledby="pageTitle">
-    <!-- bubbles -->
     <div class="bubble b1" aria-hidden="true"></div>
     <div class="bubble b2" aria-hidden="true"></div>
     <div class="bubble b3" aria-hidden="true"></div>
     <div class="bubble b4" aria-hidden="true"></div>
     <div class="bubble b5" aria-hidden="true"></div>
 
-    <!-- Back to Home + Title -->
-    <!-- UPDATED: full pill clickable (arrow + text) -->
     <a href="{{ route('home') }}" id="backBtn" class="back-btn" title="Back to Home" role="link" aria-label="Back to Home">
       <span class="back-arrow">←</span>
       <span class="back-text">Back</span>
@@ -198,7 +175,6 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
         </div>
     </div>
 
-    <!-- Success banner (green) -->
     <div id="successBanner" role="status" aria-live="polite">{{ session('success') ?? '' }}</div>
 
     <script>
@@ -224,12 +200,10 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
     @endif
     @csrf
 
-    <p class="small-muted" style="text-align:center; margin-bottom:16px;">Tip: Make sure your resume reflects your latest achievements. You can save whenever you've made a change.</p>
-
     {{-- Profile --}}
     <div class="section visible" data-section="profile">
         <h2>Profile Picture</h2>
-        <img id="profile-preview" src="{{ old('cropped_image') ?: (!empty($resume->profile_photo) ? asset('storage/'.$resume->profile_photo) : asset('images/default-avatar.png')) }}" alt="Profile Preview">
+        <img id="profile-preview" src="{{ old('cropped_image') ?: (!empty($resume->profile_photo) ? asset('storage/'.$resume->profile_photo) : asset('images/default-avatar.jpg')) }}" alt="Profile Preview">
         <input type="file" id="profile-input" accept="image/*" aria-label="Upload profile photo">
         <input type="hidden" name="cropped_image" id="cropped_image" value="{{ old('cropped_image', '') }}">
     </div>
@@ -252,7 +226,6 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
             <option value="Female" {{ old('civil_status', $resume->civil_status ?? '') === 'Female' ? 'selected' : '' }}>Female</option>
             <option value="Male" {{ old('civil_status', $resume->civil_status ?? '') === 'Male' ? 'selected' : '' }}>Male</option>
         </select>
-        <small class="small-muted">If you choose "Prefer not to say" the gender will not appear on your public resume.</small>
 
         <label>Field of Specialization</label>
         <input type="text" name="specialization" value="{{ old('specialization', $resume->specialization ?? '') }}">
@@ -420,7 +393,6 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
     </form>
 </div>
 
-<!-- Cropper modal -->
 <div id="cropper-modal">
     <div id="cropper-container">
         <img id="cropper-image" alt="Cropper Image">
@@ -431,7 +403,6 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
     </div>
 </div>
 
-<!-- File preview modal -->
 <div id="file-modal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="fm-content">
         <button id="file-modal-close" type="button" class="btn btn-remove" aria-label="Close certificate preview">Close</button>
@@ -439,7 +410,6 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
     </div>
 </div>
 
-<!-- Unsaved changes modal -->
 <div id="unsavedModal" aria-hidden="true">
     <div class="card" role="dialog" aria-labelledby="unsavedTitle">
         <h3 id="unsavedTitle">You have unsaved changes</h3>
@@ -451,15 +421,10 @@ input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
     </div>
 </div>
 
-<!-- Max toast -->
 <div id="max-toast" aria-live="polite" role="status"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.5.13/dist/cropper.min.js"></script>
 <script>
-/* ============================
-   JS: cropper, dynamic inputs,
-   file preview, unsaved-changes
-   ============================ */
 
 let cropper = null;
 const input = document.getElementById('profile-input');
@@ -482,7 +447,6 @@ function toggleSaveVisual(active){
     else btn.style.boxShadow = '';
 }
 
-// Prevent accidental enter submit
 if(resumeForm){
   resumeForm.addEventListener('keydown', function(e){
       const tag = e.target.tagName.toLowerCase();
@@ -493,7 +457,6 @@ if(resumeForm){
   });
 }
 
-/* ----------------- change tracking ----------------- */
 document.addEventListener('input', function(e){
     if(!e.target) return;
     if(!resumeForm.contains(e.target)) return;
@@ -508,7 +471,6 @@ document.addEventListener('change', function(e){
     if(e.target.tagName.toLowerCase() === 'input' && e.target.type === 'file') markDirty();
 });
 
-/* ----------------- beforeunload prompt ----------------- */
 window.addEventListener('beforeunload', function(e){
     if(!isDirty) return;
     e.preventDefault();
@@ -516,7 +478,6 @@ window.addEventListener('beforeunload', function(e){
     return '';
 });
 
-/* ----------------- Back button: intercept if dirty ----------------- */
 const backBtn = document.getElementById('backBtn');
 const unsavedModal = document.getElementById('unsavedModal');
 const leaveBtn = document.getElementById('leaveBtn');
@@ -558,7 +519,6 @@ if(stayBtn){
     });
 }
 
-/* Clear dirty when form submits */
 if(resumeForm){
     resumeForm.addEventListener('submit', function(){
         isDirty = false;
@@ -570,9 +530,6 @@ if(resumeForm){
     });
 }
 
-/* ---------------------------------------
-   Profile cropper
-   --------------------------------------- */
 if(input){
   input.addEventListener('change', function(e){
       const file = e.target.files[0];
@@ -605,9 +562,6 @@ document.getElementById('cancel-btn').addEventListener('click', () => {
     try{ document.getElementById('profile-input').value = ''; } catch(e){}
 });
 
-/* ---------------------------------------
-   Section filter logic
-   --------------------------------------- */
 const filter = document.getElementById('section-filter');
 if(filter){
   filter.addEventListener('change', function(){
@@ -622,9 +576,6 @@ if(filter){
   });
 }
 
-/* ---------------------------------------
-   Dynamic helpers (kept) plus markDirty after add
-   --------------------------------------- */
 function addInput(id,name){
     const c=document.getElementById(id);
     const d=document.createElement('div');
@@ -674,9 +625,6 @@ function addAward(){
     markDirty();
 }
 
-/* ---------------------------------------
-   Awards file preview logic (kept)
-   --------------------------------------- */
 const fileModal = document.getElementById('file-modal');
 const fileModalBody = document.getElementById('file-modal-body');
 const fileCloseBtn = document.getElementById('file-modal-close');
@@ -777,7 +725,6 @@ if(fileCloseBtn){
   });
 }
 
-/* ESC to close modals */
 document.addEventListener('keydown', function(e){
     if(e.key === 'Escape') {
         if(modal && modal.style.display === 'flex') {
@@ -799,9 +746,6 @@ document.addEventListener('keydown', function(e){
     }
 });
 
-/* --------------------------------
-   maxlength toast (kept)
-   -------------------------------- */
 const toast = document.getElementById('max-toast');
 let toastTimer = null;
 function showMaxToast(msg){
@@ -857,7 +801,6 @@ document.addEventListener('DOMContentLoaded', function(){
     initMaxLengthWatcher();
 });
 
-/* toggle next input */
 function toggleNextInput(el){
     if(!el) return;
     const row = el.closest('.array-input');

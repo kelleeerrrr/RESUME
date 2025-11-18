@@ -9,19 +9,15 @@ class HomeController extends Controller
 {
     public function index(Request $request)
     {
-        // Get user info from session
         $userId = session('user_id');
         $userName = session('user_name', 'User');
 
-        // If no user is logged in, redirect to login
         if (!$userId) {
             return redirect('/login')->with('error', 'Please log in to access your homepage.');
         }
 
-        // Fetch the resume of the logged-in user
         $resume = Resume::with('awardFiles')->where('user_id', $userId)->first();
 
-        // Ensure arrays are properly formatted
         if ($resume) {
             $resume->awardFiles = $resume->awardFiles ?? collect();
             $resume->interests = is_array($resume->interests)
@@ -33,7 +29,6 @@ class HomeController extends Controller
                 : (is_string($resume->projects) ? json_decode($resume->projects, true) ?? [] : []);
         }
 
-        // Return the home view with username + resume
         return view('home', compact('userName', 'resume'));
     }
 }

@@ -139,7 +139,7 @@
     <div class="card">
       <div class="left-col">
         <div class="welcome">Dashboard</div>
-        <div class="subtitle">Here you can create or edit your public resume, and manage what others see.</div>
+        <div class="subtitle">Here you can create or edit your resume, and manage what others see.</div>
 
         {{-- Public Resume Link --}}
         @php
@@ -147,7 +147,7 @@
           $resumeLink = $resume ? url('/public-resume/'.$userId) : '';
         @endphp
         <div class="resume-link-container">
-          <input type="text" id="publicResumeLink" value="{{ $resumeLink }}" readonly {{ $resumeLink ? '' : 'placeholder=No public resume yet' }}>
+          <input type="text" id="publicResumeLink" value="{{ $resumeLink }}" readonly {{ $resumeLink ? '' : 'placeholder= -' }}>
           <button type="button" id="copyResumeBtn" {{ $resumeLink ? '' : 'disabled' }}>Copy</button>
         </div>
 
@@ -170,7 +170,7 @@
             @if($resume && $resume->profile_photo)
               <img src="{{ asset('storage/'.$resume->profile_photo) }}" alt="{{ $userName ?? 'User' }}" class="photo">
             @else
-              <img src="{{ asset('images/default-avatar.png') }}" alt="Default Profile" class="photo">
+              <img src="{{ asset('images/default-avatar.jpg') }}" alt="Default Profile" class="photo">
             @endif
           </div>
           <div class="meta">

@@ -1,13 +1,9 @@
-<!-- resources/views/public_topbar.blade.php -->
-<!-- Public Topbar Component -->
 <div class="public-topbar" aria-hidden="false">
-  <!-- Header -->
   <header role="banner">
     <img src="{{ asset('images/logo.png') }}" alt="Logo" />
     <button id="themeToggle" aria-label="Toggle dark mode" type="button">🌙</button>
   </header>
 
-  <!-- Back button row -->
   <div class="back-btn-row">
     <a href="{{ route('welcome') }}" id="backBtn" class="back-btn" role="link" aria-label="Back to welcome">Back →</a>
   </div>
@@ -138,11 +134,9 @@
       backBtn.addEventListener('click', function(e){
         if(e.metaKey||e.ctrlKey||e.button===1) return;
         e.preventDefault();
-
-        // Persist current theme
+        
         persistTheme(getCurrentTheme()||'light');
 
-        // Navigate to href with no ?theme param (Welcome page will read localStorage)
         var href = backBtn.getAttribute('href') || welcomeFallback;
         window.location.href = href;
       });

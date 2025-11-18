@@ -12,8 +12,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id'); 
             $table->string('fullname');
-            $table->text('about')->nullable();
-
+            
             // Personal Info
             $table->string('dob')->nullable();
             $table->string('pob')->nullable();
@@ -26,8 +25,6 @@ return new class extends Migration
             // Organization & Interests
             $table->json('organization')->nullable();
             $table->json('interests')->nullable();
-
-            // Other Info
             $table->json('education')->nullable();
             $table->json('skills')->nullable();
             $table->json('projects')->nullable();

@@ -201,7 +201,6 @@
       cursor:pointer;
     }
 
-    /* small helper: hide printable-only bits */
     .no-print { display: inline; }
     @media print { .no-print { display:none !important; } }
 
@@ -242,7 +241,12 @@
 
 <div class="action-row">
   <button class="download-cv-btn" id="downloadCvBtn">📄 Download CV</button>
-  <a href="{{ route('welcome') }}" id="backBtn" class="back-btn themed-link">Back →</a>
+  @php
+    $backUrl = session()->has('user_id') ? route('home') : route('welcome');
+  @endphp
+
+  <a href="{{ $backUrl }}" id="backBtn" class="back-btn themed-link">← Back</a>
+
 </div>
 
 @php
@@ -318,14 +322,14 @@
 
 <div class="container" id="resumeContainer">
   <div class="left">
-    <img src="{{ $resume->profile_photo ? asset('storage/' . $resume->profile_photo) . '?t=' . time() : asset('profile.jpg') }}" alt="Profile Picture">
+    <img src="{{ $resume->profile_photo ? asset('storage/' . $resume->profile_photo) . '?t=' . time() : asset('images/default-avatar.jpg') }}" alt="Profile Picture">
 
     @if(hasValues([$resume->fullname, $resume->dob, $resume->pob, $resume->civil_status, $resume->specialization]))
       <h2>Personal Information</h2>
       @if(!empty($resume->fullname)) <p><strong>Full Name:</strong> {{ $resume->fullname }}</p> @endif
       @if(!empty($resume->dob)) <p><strong>Date of Birth:</strong> {{ $resume->dob }}</p> @endif
       @if(!empty($resume->pob)) <p><strong>Place of Birth:</strong> {{ $resume->pob }}</p> @endif
-      @if(!empty($resume->civil_status)) <p><strong>Civil Status:</strong> {{ $resume->civil_status }}</p> @endif
+      @if(!empty($resume->civil_status)) <p><strong>Gender:</strong> {{ $resume->civil_status }}</p> @endif
       @if(!empty($resume->specialization)) <p><strong>Field of Specialization:</strong> {{ $resume->specialization }}</p> @endif
     @endif
 
@@ -510,16 +514,10 @@
   }
 })();
 
-/* Certificate modal logic:
-   - openCertificateModal(url) : url should be a public URL (asset('storage/...'))
-   - if url ends with .pdf => iframe
-   - else => img (object-fit: contain)
-*/
 function openCertificateModal(url) {
   if(!url) return;
   const modal = document.getElementById('certificateModal');
   const body = document.getElementById('certificateModalBody');
-  // cleanup
   body.innerHTML = '';
 
   const lower = url.split('?')[0].toLowerCase();
@@ -549,11 +547,9 @@ function closeCertificateModal(){
   const body = document.getElementById('certificateModalBody');
   modal.style.display = 'none';
   modal.setAttribute('aria-hidden','true');
-  // cleanup
   body.innerHTML = '';
 }
 
-// close when clicking outside content
 window.addEventListener('click', function(e){
   const modal = document.getElementById('certificateModal');
   const content = modal && modal.querySelector('.modal-content');
@@ -562,7 +558,6 @@ window.addEventListener('click', function(e){
   }
 });
 
-// escape key
 document.addEventListener('keydown', function(e){
   if(e.key === 'Escape') {
     const modal = document.getElementById('certificateModal');

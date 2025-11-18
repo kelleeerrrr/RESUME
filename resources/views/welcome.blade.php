@@ -256,7 +256,7 @@
       content: "View Resume";
       position:absolute;
       left:8px; right:8px; bottom:-40px;
-      background: linear-gradient(90deg,#ffb3c6,#ff9ec7);
+      background: linear-gradient(90deg,#ff5a9b,#ff3d7a);
       color:#fff; height:36px; line-height:36px; font-weight:700; text-align:center;
       border-radius:8px;
       transition: bottom .18s ease;
@@ -374,8 +374,8 @@
 
         <div class="inner" aria-label="Search and sort controls">
           <div class="controls" role="group" aria-label="Search and sort">
-            <input id="searchInput" class="search" type="search" placeholder="Search name or interest (e.g. 'Web', 'AI')"
-                   aria-label="Search resumes by name or interest">
+            <input id="searchInput" class="search" type="search" placeholder="Search by any field (name, course, interests...)"
+                   aria-label="Search resumes by any field">
             <select id="sortSelect" class="sort-select" aria-label="Sort resumes">
               <option value="az">A to Z (First Name)</option>
               <option value="za">Z to A (First Name)</option>
@@ -389,15 +389,17 @@
             @forelse($users as $user)
               @php
                 $r = $user->resume ?? null;
-                $photo = $r && !empty($r->profile_photo) ? asset('storage/'.$r->profile_photo) : asset('images/default-avatar.png');
+                $photo = $r && !empty($r->profile_photo) ? asset('storage/'.$r->profile_photo) : asset('images/default-avatar.jpg');
                 $course = $r->course ?? $r->specialization ?? ($r && is_string($r->interests) ? $r->interests : '');
+                $interests = is_array($r->interests) ? implode(' ', $r->interests) : ($r->interests ?? '');
                 $created = $user->created_at ?? now();
               @endphp
 
               <a href="{{ route('resume.public.show', $user->id) }}"
                  class="user-card"
                  data-name="{{ strtolower($user->name ?? '') }}"
-                 data-interests="{{ strtolower(is_string($r && $r->interests ? $r->interests : '')) }}"
+                 data-course="{{ strtolower($course ?? '') }}"
+                 data-interests="{{ strtolower($interests ?? '') }}"
                  data-date="{{ $created }}"
                  title="Open {{ $user->name ?? 'User' }}'s resume"
               >
@@ -496,8 +498,9 @@
 
         cards.forEach(c => {
           const name = c.dataset.name || '';
+          const course = c.dataset.course || '';
           const interests = c.dataset.interests || '';
-          const match = name.includes(q) || interests.includes(q);
+          const match = name.includes(q) || course.includes(q) || interests.includes(q);
           c.style.display = match ? '' : 'none';
           if(match) visibleCount++;
         });
@@ -507,7 +510,13 @@
         removeSeeAllCard();
         if(visibleCount > MAX_VISIBLE){
           createSeeAllCard(visibleCount - MAX_VISIBLE);
-          cards.forEach((c, idx) => { if(idx >= MAX_VISIBLE) c.style.display = 'none'; });
+          let shown = 0;
+          cards.forEach(c => {
+            if(c.style.display !== 'none') {
+              if(shown < MAX_VISIBLE) shown++;
+              else c.style.display = 'none';
+            }
+          });
         }
       }
 

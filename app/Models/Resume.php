@@ -24,7 +24,6 @@ class Resume extends Model
         'skills',
         'programming',
         'projects',
-        'about',
     ];
 
     protected $casts = [
